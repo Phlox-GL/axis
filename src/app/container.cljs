@@ -45,16 +45,19 @@
              (g :line-style {:color (hslx 0 0 100), :alpha 1, :width 1})]
             (->> path rest (map (fn [point] (g :line-to point)))))}))))
 
+(defn square [x] (* x x))
+
+(defn normal-distribution [x]
+  (let [miu 1, tao 0.6]
+    (*
+     (/ 1 (js/Math.sqrt (* 2 js/Math.PI)) tao)
+     (js/Math.exp (unchecked-negate (/ (square (- x miu)) 2 (square tao)))))))
+
 (defcomp
  comp-container
  (store)
- (let [states (:states store), cursor []]
+ (let [states (:states store), cursor [], f normal-distribution]
    (container
     {:position [160 60]}
     (comp-axis
-     {:position [0 0],
-      :size [800 600],
-      :x-range [-0.8 0.8],
-      :y-range [0 0.8],
-      :n 100,
-      :f (fn [x] (* x x))}))))
+     {:position [0 0], :size [800 600], :x-range [-1 4], :y-range [0 1], :n 100, :f f}))))
