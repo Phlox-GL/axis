@@ -8,45 +8,49 @@
             [app.math :refer [subtract-path]]))
 
 (defcomp
+ comp-note
+ (v position)
+ (text {:text (str v), :position position, :style {:fill (hslx 0 0 80), :font-size 14}}))
+
+(defcomp
  comp-axis
  (options)
- (let [f (:f options)
-       position (:position options)
+ (let [position (:position options)
        [w h] (:size options)
        [x0 x1] (:x-range options)
        [y0 y1] (:y-range options)
-       n (:n options)
-       path (->> (range n)
-                 (map
-                  (fn [idx]
-                    (let [x (+ x0 (/ (* idx (- x1 x0)) n))
-                          y (f x)
-                          mx (* idx (/ w n))
-                          my (- h (* h (/ (- y y0) (- y1 y0))))]
-                      [mx my]))))]
+       n (:n options)]
    (container
     {:position position}
-    (text
-     {:text (str y0),
-      :position [(- 0 20) (- h 20)],
-      :style {:fill (hslx 0 0 80), :font-size 14}})
-    (text
-     {:text (str y1), :position [(- 0 30) 0], :style {:fill (hslx 0 0 80), :font-size 14}})
-    (text
-     {:text (str x0), :position [20 (+ h 10)], :style {:fill (hslx 0 0 80), :font-size 14}})
-    (text
-     {:text (str x1), :position [w (+ h 10)], :style {:fill (hslx 0 0 80), :font-size 14}})
+    (comp-note y0 [(- 0 20) (- h 20)])
+    (comp-note y1 [(- 0 30) 0])
+    (comp-note x0 [20 (+ h 10)])
+    (comp-note x1 [w (+ h 10)])
     (graphics
      {:ops [(g :move-to [0 h])
-            (g :line-style {:color (hslx 0 0 90), :alpha 1, :width 1})
+            (g :line-style {:color (hslx 0 0 50), :alpha 1, :width 1})
             (g :line-to [0 0])
             (g :move-to [0 h])
             (g :line-to [w h])]})
-    (graphics
-     {:ops (concat
-            [(g :move-to (first path))
-             (g :line-style {:color (hslx 0 0 100), :alpha 1, :width 1})]
-            (->> path rest (map (fn [point] (g :line-to point)))))}))))
+    (create-list
+     {}
+     (->> (:funcs options)
+          (map-indexed
+           (fn [idx f]
+             [idx
+              (let [path (->> (range n)
+                              (map
+                               (fn [idx]
+                                 (let [x (+ x0 (/ (* idx (- x1 x0)) n))
+                                       y (f x)
+                                       mx (* idx (/ w n))
+                                       my (- h (* h (/ (- y y0) (- y1 y0))))]
+                                   [mx my]))))]
+                (graphics
+                 {:ops (concat
+                        [(g :move-to (first path))
+                         (g :line-style {:color (hslx 0 0 100), :alpha 1, :width 1})]
+                        (->> path rest (map (fn [point] (g :line-to point)))))}))])))))))
 
 (defcomp
  comp-controls
@@ -96,7 +100,7 @@
   (comp-slider
    (>> states :n)
    {:value (:n state),
-    :unit 0.1,
+    :unit 0.5,
     :round? true,
     :position [680 40],
     :title "n",
@@ -116,8 +120,7 @@
  (let [states (:states store)
        cursor []
        state (or (:data states)
-                 {:position [20 20], :edge [800 600], :x0 -1, :x1 4, :y0 0, :y1 1, :n 100})
-       f normal-distribution]
+                 {:position [20 20], :edge [800 600], :x0 -1, :x1 4, :y0 0, :y1 1, :n 100})]
    (container
     {:position [0 0]}
     (comp-axis
@@ -126,5 +129,5 @@
       :x-range [(:x0 state) (:x1 state)],
       :y-range [(:y0 state) (:y1 state)],
       :n (:n state),
-      :f f})
+      :funcs [normal-distribution identity]})
     (comp-controls cursor states state))))
