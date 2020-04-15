@@ -2,7 +2,10 @@
 (ns app.container
   (:require [phlox.core
              :refer
-             [defcomp hslx rect circle text container graphics create-list g]]))
+             [defcomp hslx >> rect circle text container graphics create-list g]]
+            [phlox.comp.drag-point :refer [comp-drag-point]]
+            [phlox.comp.slider :refer [comp-slider]]
+            [app.math :refer [subtract-path]]))
 
 (defcomp
  comp-axis
@@ -45,6 +48,60 @@
              (g :line-style {:color (hslx 0 0 100), :alpha 1, :width 1})]
             (->> path rest (map (fn [point] (g :line-to point)))))}))))
 
+(defcomp
+ comp-controls
+ (cursor states state)
+ (container
+  {}
+  (comp-drag-point
+   (>> states :position)
+   {:position (:position state),
+    :unit 1,
+    :title "[0,0]",
+    :on-change (fn [p d!] (d! cursor (assoc state :position p)))})
+  (comp-drag-point
+   (>> states :edge)
+   {:position (:edge state),
+    :unit 1,
+    :title "edge",
+    :on-change (fn [p d!] (d! cursor (assoc state :edge p)))})
+  (comp-slider
+   (>> states :x0)
+   {:value (:x0 state),
+    :unit 0.1,
+    :position [120 40],
+    :title "x0",
+    :on-change (fn [v d!] (d! cursor (assoc state :x0 v)))})
+  (comp-slider
+   (>> states :x1)
+   {:value (:x1 state),
+    :unit 0.1,
+    :position [260 40],
+    :title "x1",
+    :on-change (fn [v d!] (d! cursor (assoc state :x1 v)))})
+  (comp-slider
+   (>> states :y0)
+   {:value (:y0 state),
+    :unit 0.1,
+    :position [400 40],
+    :title "y0",
+    :on-change (fn [v d!] (d! cursor (assoc state :y0 v)))})
+  (comp-slider
+   (>> states :y1)
+   {:value (:y1 state),
+    :unit 0.1,
+    :position [540 40],
+    :title "y1",
+    :on-change (fn [v d!] (d! cursor (assoc state :y1 v)))})
+  (comp-slider
+   (>> states :n)
+   {:value (:n state),
+    :unit 0.1,
+    :round? true,
+    :position [680 40],
+    :title "n",
+    :on-change (fn [v d!] (d! cursor (assoc state :n v)))})))
+
 (defn square [x] (* x x))
 
 (defn normal-distribution [x]
@@ -56,8 +113,18 @@
 (defcomp
  comp-container
  (store)
- (let [states (:states store), cursor [], f normal-distribution]
+ (let [states (:states store)
+       cursor []
+       state (or (:data states)
+                 {:position [20 20], :edge [800 600], :x0 -1, :x1 4, :y0 0, :y1 1, :n 100})
+       f normal-distribution]
    (container
-    {:position [160 60]}
+    {:position [0 0]}
     (comp-axis
-     {:position [0 0], :size [800 600], :x-range [-1 4], :y-range [0 1], :n 100, :f f}))))
+     {:position (:position state),
+      :size (subtract-path (:edge state) (:position state)),
+      :x-range [(:x0 state) (:x1 state)],
+      :y-range [(:y0 state) (:y1 state)],
+      :n (:n state),
+      :f f})
+    (comp-controls cursor states state))))
