@@ -4,13 +4,8 @@
              :refer
              [defcomp hslx >> rect circle text container graphics create-list g]]
             [phlox.comp.drag-point :refer [comp-drag-point]]
-            [phlox.comp.slider :refer [comp-slider]]
-            [app.math :refer [subtract-path]]))
-
-(defcomp
- comp-note
- (v position)
- (text {:text (str v), :position position, :style {:fill (hslx 0 0 80), :font-size 14}}))
+            [phlox.comp.slider :refer [comp-slider comp-slider-point]]
+            [app.math :refer [subtract-path add-path]]))
 
 (defcomp
  comp-axis
@@ -22,10 +17,6 @@
        n (:n options)]
    (container
     {:position position}
-    (comp-note y0 [(- 0 20) (- h 20)])
-    (comp-note y1 [(- 0 30) 0])
-    (comp-note x0 [20 (+ h 10)])
-    (comp-note x1 [w (+ h 10)])
     (graphics
      {:ops [(g :move-to [0 h])
             (g :line-style {:color (hslx 0 0 50), :alpha 1, :width 1})
@@ -69,40 +60,37 @@
     :unit 1,
     :title "edge",
     :on-change (fn [p d!] (d! cursor (assoc state :edge p)))})
-  (comp-slider
+  (comp-slider-point
    (>> states :x0)
    {:value (:x0 state),
     :unit 0.1,
-    :position [120 40],
-    :title "x0",
+    :position (-> [(first (:position state)) (peek (:edge state))] (add-path [10 20])),
     :on-change (fn [v d!] (d! cursor (assoc state :x0 v)))})
-  (comp-slider
+  (comp-slider-point
    (>> states :x1)
    {:value (:x1 state),
     :unit 0.1,
-    :position [260 40],
-    :title "x1",
+    :position (-> (:edge state) (add-path [-20 20])),
     :on-change (fn [v d!] (d! cursor (assoc state :x1 v)))})
-  (comp-slider
+  (comp-slider-point
    (>> states :y0)
    {:value (:y0 state),
     :unit 0.1,
-    :position [400 40],
-    :title "y0",
+    :position (-> [(first (:position state)) (peek (:edge state))] (add-path [-70 -10])),
     :on-change (fn [v d!] (d! cursor (assoc state :y0 v)))})
-  (comp-slider
+  (comp-slider-point
    (>> states :y1)
    {:value (:y1 state),
     :unit 0.1,
-    :position [540 40],
-    :title "y1",
+    :position (add-path (:position state) [-60 0]),
     :on-change (fn [v d!] (d! cursor (assoc state :y1 v)))})
   (comp-slider
    (>> states :n)
    {:value (:n state),
     :unit 0.5,
     :round? true,
-    :position [680 40],
+    :position [80 40],
+    :min 2,
     :title "n",
     :on-change (fn [v d!] (d! cursor (assoc state :n v)))})))
 
