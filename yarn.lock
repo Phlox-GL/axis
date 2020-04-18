@@ -629,9 +629,9 @@ isexe@^2.0.0:
   integrity sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=
 
 ismobilejs@^1.0.3:
-  version "1.1.0"
-  resolved "https://registry.npm.taobao.org/ismobilejs/download/ismobilejs-1.1.0.tgz?cache=0&sync_timestamp=1586676903469&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fismobilejs%2Fdownload%2Fismobilejs-1.1.0.tgz#d37ceeac14905d55063cdcae2955688c170f3d5e"
-  integrity sha1-03zurBSQXVUGPNyuKVVojBcPPV4=
+  version "1.1.1"
+  resolved "https://registry.npm.taobao.org/ismobilejs/download/ismobilejs-1.1.1.tgz?cache=0&sync_timestamp=1586903819705&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fismobilejs%2Fdownload%2Fismobilejs-1.1.1.tgz#c56ca0ae8e52b24ca0f22ba5ef3215a2ddbbaa0e"
+  integrity sha1-xWygro5Sskyg8iul7zIVot27qg4=
 
 md5.js@^1.3.4:
   version "1.3.5"
@@ -906,10 +906,10 @@ shadow-cljs-jar@1.3.2:
   resolved "https://registry.npm.taobao.org/shadow-cljs-jar/download/shadow-cljs-jar-1.3.2.tgz#97273afe1747b6a2311917c1c88d9e243c81957b"
   integrity sha1-lyc6/hdHtqIxGRfByI2eJDyBlXs=
 
-shadow-cljs@^2.8.95:
-  version "2.8.95"
-  resolved "https://registry.npm.taobao.org/shadow-cljs/download/shadow-cljs-2.8.95.tgz#e7ce47ea2a12107c8242250f3d7c33fd5566d437"
-  integrity sha1-585H6ioSEHyCQiUPPXwz/VVm1Dc=
+shadow-cljs@^2.8.96:
+  version "2.8.96"
+  resolved "https://registry.npm.taobao.org/shadow-cljs/download/shadow-cljs-2.8.96.tgz#7e263e5a1f02f7737d3c4fd91973d396d43594f6"
+  integrity sha1-fiY+Wh8C93N9PE/ZGXPTltQ1lPY=
   dependencies:
     node-libs-browser "^2.0.0"
     readline-sync "^1.4.7"
@@ -939,7 +939,7 @@ source-map@^0.5.6:
 
 stream-browserify@^2.0.1:
   version "2.0.2"
-  resolved "https://registry.npm.taobao.org/stream-browserify/download/stream-browserify-2.0.2.tgz#87521d38a44aa7ee91ce1cd2a47df0cb49dd660b"
+  resolved "https://registry.npm.taobao.org/stream-browserify/download/stream-browserify-2.0.2.tgz?cache=0&sync_timestamp=1587041545531&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fstream-browserify%2Fdownload%2Fstream-browserify-2.0.2.tgz#87521d38a44aa7ee91ce1cd2a47df0cb49dd660b"
   integrity sha1-h1IdOKRKp+6RzhzSpH3wy0ndZgs=
   dependencies:
     inherits "~2.0.1"
