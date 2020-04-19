@@ -4,8 +4,13 @@
              :refer
              [defcomp hslx >> rect circle text container graphics create-list g]]
             [phlox.comp.drag-point :refer [comp-drag-point]]
+            [phlox.comp.button :refer [comp-button]]
             [phlox.comp.slider :refer [comp-slider comp-slider-point]]
-            [app.math :refer [subtract-path add-path]]))
+            [app.math :refer [subtract-path add-path]]
+            [respo-ui.core :as ui]
+            [phlox.input :refer [request-text!]]
+            [cirru-parser.core :refer [parse]]
+            [calc-dsl.core :refer [calc-expr]]))
 
 (defcomp
  comp-axis
@@ -27,13 +32,13 @@
      {}
      (->> (:funcs options)
           (map-indexed
-           (fn [idx f]
+           (fn [idx func]
              [idx
               (let [path (->> (range n)
                               (map
                                (fn [idx]
                                  (let [x (+ x0 (/ (* idx (- x1 x0)) n))
-                                       y (f x)
+                                       y (calc-expr (first (:tree func)) x)
                                        mx (* idx (/ w n))
                                        my (- h (* h (/ (- y y0) (- y1 y0))))]
                                    [mx my]))))]
@@ -94,13 +99,46 @@
     :title "n",
     :on-change (fn [v d!] (d! cursor (assoc state :n v)))})))
 
-(defn square [x] (* x x))
-
-(defn normal-distribution [x]
-  (let [miu 1, tao 0.6]
-    (*
-     (/ 1 (js/Math.sqrt (* 2 js/Math.PI)) tao)
-     (js/Math.exp (unchecked-negate (/ (square (- x miu)) 2 (square tao)))))))
+(defcomp
+ comp-funcs
+ (cursor states state)
+ (container
+  {:position [220 20]}
+  (create-list
+   {}
+   (->> (:funcs state)
+        (map-indexed
+         (fn [idx func]
+           [idx
+            (container
+             {}
+             (rect
+              {:position [0 (+ 0 (* idx 24))],
+               :size [200 20],
+               :fill (hslx 0 0 40),
+               :on {:click (fn [e d!]
+                      (request-text!
+                       e
+                       {:inital (:code func), :initial (:code func)}
+                       (fn [code]
+                         (d!
+                          cursor
+                          (assoc-in state [:funcs idx] {:code code, :tree (parse code)})))))}}
+              (text
+               {:position [10 2],
+                :text (:code func),
+                :style {:fill (hslx 0 0 80), :font-family ui/font-code, :font-size 12}})))]))))
+  (comp-button
+   {:text "Add",
+    :position [0 (* 24 (count (:funcs state)))],
+    :on-click (fn [e d!]
+      (request-text!
+       e
+       {:placeholder "An expression"}
+       (fn [code]
+         (d!
+          cursor
+          (update state :funcs (fn [funcs] (conj funcs {:code code, :tree (parse code)})))))))})))
 
 (defcomp
  comp-container
@@ -108,7 +146,14 @@
  (let [states (:states store)
        cursor []
        state (or (:data states)
-                 {:position [20 20], :edge [800 600], :x0 -1, :x1 4, :y0 0, :y1 1, :n 100})]
+                 {:position [20 20],
+                  :edge [800 600],
+                  :x0 -1,
+                  :x1 4,
+                  :y0 0,
+                  :y1 1,
+                  :n 100,
+                  :funcs []})]
    (container
     {:position [0 0]}
     (comp-axis
@@ -117,5 +162,14 @@
       :x-range [(:x0 state) (:x1 state)],
       :y-range [(:y0 state) (:y1 state)],
       :n (:n state),
-      :funcs [normal-distribution identity]})
-    (comp-controls cursor states state))))
+      :funcs (:funcs state)})
+    (comp-controls cursor states state)
+    (comp-funcs cursor states state))))
+
+(defn square [x] (* x x))
+
+(defn normal-distribution [x]
+  (let [miu 1, tao 0.6]
+    (*
+     (/ 1 (js/Math.sqrt (* 2 js/Math.PI)) tao)
+     (js/Math.exp (unchecked-negate (/ (square (- x miu)) 2 (square tao)))))))
