@@ -7,7 +7,10 @@
             [app.schema :as schema]
             [app.config :refer [dev?]]
             [app.updater :refer [updater]]
-            ["fontfaceobserver" :as FontFaceObserver]))
+            ["fontfaceobserver" :as FontFaceObserver]
+            [app.config :as config]
+            [cljs.reader :refer [read-string]]
+            [cumulo-util.core :refer [repeat!]]))
 
 (defonce *store (atom schema/store))
 
@@ -23,10 +26,17 @@
   (js/Promise.all
    (array (.load (FontFaceObserver. "Josefin Sans")) (.load (FontFaceObserver. "Hind")))))
 
+(defn persist-store! []
+  (.setItem js/localStorage (:storage-key config/site) (pr-str @*store)))
+
 (defn main! []
   (comment js/console.log PIXI)
   (-> global-fonts (.then (fn [] (render! (comp-container @*store) dispatch! {}))))
   (add-watch *store :change (fn [] (render! (comp-container @*store) dispatch! {})))
+  (.addEventListener js/window "beforeunload" persist-store!)
+  (repeat! 60 persist-store!)
+  (let [raw (.getItem js/localStorage (:storage-key config/site))]
+    (when (some? raw) (dispatch! :hydrate-storage (read-string raw))))
   (println "App Started"))
 
 (defn reload! []
