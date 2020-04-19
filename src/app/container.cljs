@@ -10,7 +10,8 @@
             [respo-ui.core :as ui]
             [phlox.input :refer [request-text!]]
             [cirru-parser.core :refer [parse]]
-            [calc-dsl.core :refer [calc-expr]]))
+            [calc-dsl.core :refer [calc-expr]]
+            [clojure.string :as string]))
 
 (defcomp
  comp-axis
@@ -116,14 +117,23 @@
               {:position [0 (+ 0 (* idx 24))],
                :size [200 20],
                :fill (hslx 0 0 40),
+               :alpha 0.8,
                :on {:click (fn [e d!]
                       (request-text!
                        e
-                       {:inital (:code func), :initial (:code func)}
+                       {:initial (:code func), :style {:font-family ui/font-code}}
                        (fn [code]
-                         (d!
-                          cursor
-                          (assoc-in state [:funcs idx] {:code code, :tree (parse code)})))))}}
+                         (if (string/blank? code)
+                           (d!
+                            cursor
+                            (update
+                             state
+                             :funcs
+                             (fn [funcs]
+                               (vec (concat (subvec funcs 0 idx) (subvec funcs (inc idx)))))))
+                           (d!
+                            cursor
+                            (assoc-in state [:funcs idx] {:code code, :tree (parse code)}))))))}}
               (text
                {:position [10 2],
                 :text (:code func),
@@ -134,11 +144,12 @@
     :on-click (fn [e d!]
       (request-text!
        e
-       {:placeholder "An expression"}
+       {:placeholder "An expression", :style {:font-family ui/font-code}}
        (fn [code]
-         (d!
-          cursor
-          (update state :funcs (fn [funcs] (conj funcs {:code code, :tree (parse code)})))))))})))
+         (when-not (string/blank? code)
+           (d!
+            cursor
+            (update state :funcs (fn [funcs] (conj funcs {:code code, :tree (parse code)}))))))))})))
 
 (defcomp
  comp-container
@@ -146,8 +157,8 @@
  (let [states (:states store)
        cursor []
        state (or (:data states)
-                 {:position [20 20],
-                  :edge [800 600],
+                 {:position [100 100],
+                  :edge [880 600],
                   :x0 -1,
                   :x1 4,
                   :y0 0,
@@ -167,9 +178,3 @@
     (comp-funcs cursor states state))))
 
 (defn square [x] (* x x))
-
-(defn normal-distribution [x]
-  (let [miu 1, tao 0.6]
-    (*
-     (/ 1 (js/Math.sqrt (* 2 js/Math.PI)) tao)
-     (js/Math.exp (unchecked-negate (/ (square (- x miu)) 2 (square tao)))))))
