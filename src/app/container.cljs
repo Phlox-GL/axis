@@ -39,7 +39,7 @@
                               (map
                                (fn [idx]
                                  (let [x (+ x0 (/ (* idx (- x1 x0)) n))
-                                       y (calc-expr (first (:tree func)) x)
+                                       y (calc-expr (first (:tree func)) {"x" x})
                                        mx (* idx (/ w n))
                                        my (- h (* h (/ (- y y0) (- y1 y0))))]
                                    [mx my]))))]
