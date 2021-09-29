@@ -53,7 +53,7 @@
                     :n 100
                     :funcs $ []
               container
-                {} $ :position ([] 0 0)
+                {} $ :position ([] -400 -300)
                 comp-axis $ {}
                   :position $ :position state
                   :size $ subtract-path (:edge state) (:position state)
@@ -273,7 +273,7 @@
                   println "\"dispatch!" op op-data
                 let
                     op-id $ shortid/generate
-                    op-time $ .now js/Date
+                    op-time $ js/Date.now
                   reset! *store $ updater @*store op op-data op-id op-time
         |reload! $ quote
           defn reload! () $ if (nil? build-errors)
