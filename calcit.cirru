@@ -1,5 +1,5 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |app)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
@@ -10,7 +10,8 @@
       :defs $ {}
         |dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def dev? $ = |dev (option:unwrap-or (get-env |mode) |release)
+            def dev? $ = |dev
+              option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Dynamic
         |site $ %{} 'CodeEntry (:doc |)
@@ -26,11 +27,11 @@
           :code $ quote
             defcomp comp-axis (options)
               let-sugar
-                  position $ :position options
-                  ([] w h) (:size options)
-                  ([] x0 x1) (:x-range options)
-                  ([] y0 y1) (:y-range options)
-                  n $ :n options
+                  position $ option:unwrap-or (get options :position) nil
+                  ([] w h) $ option:unwrap-or (get options :size) []
+                  ([] x0 x1) $ option:unwrap-or (get options :x-range) []
+                  ([] y0 y1) $ option:unwrap-or (get options :y-range) []
+                  n $ option:unwrap-or (get options :n) nil
                 container
                   {} $ :position position
                   graphics $ {}
@@ -44,7 +45,7 @@
                       g :move-to $ [] 0 h
                       g :line-to $ [] w h
                   create-list :container ({})
-                    -> (:funcs options)
+                    -> (option:unwrap-or (get options :funcs) [])
                       map-indexed $ fn (idx func)
                         [] idx $ let
                             path $ -> (range n)
@@ -55,7 +56,7 @@
                                         * idx $ - x1 x0
                                         , n
                                     y $ calc-expr
-                                      first $ :tree func
+                                      option:unwrap-or (first (option:unwrap-or (get func :tree) [])) nil
                                       {} $ |x x
                                     mx $ * idx (/ w n)
                                     my $ - h
@@ -77,9 +78,9 @@
           :code $ quote
             defcomp comp-container (store)
               let
-                  states $ :states store
+                  states $ option:unwrap-or (get store :states) {}
                   cursor $ []
-                  state $ or (:data states)
+                  state $ or (option:unwrap-or (get states :data) nil)
                     {}
                       :position $ [] 100 100
                       :edge $ [] 880 600
@@ -92,12 +93,12 @@
                 container
                   {} $ :position ([] -400 -300)
                   comp-axis $ {}
-                    :position $ :position state
-                    :size $ subtract-path (:edge state) (:position state)
-                    :x-range $ [] (:x0 state) (:x1 state)
-                    :y-range $ [] (:y0 state) (:y1 state)
-                    :n $ :n state
-                    :funcs $ :funcs state
+                    :position $ option:unwrap-or (get state :position) nil
+                    :size $ subtract-path (option:unwrap-or (get state :edge) nil) (option:unwrap-or (get state :position) nil)
+                    :x-range $ [] (option:unwrap-or (get state :x0) nil) (option:unwrap-or (get state :x1) nil)
+                    :y-range $ [] (option:unwrap-or (get state :y0) nil) (option:unwrap-or (get state :y1) nil)
+                    :n $ option:unwrap-or (get state :n) nil
+                    :funcs $ option:unwrap-or (get state :funcs) []
                   comp-controls cursor states state
                   comp-funcs cursor states state
           :examples $ []
@@ -108,58 +109,58 @@
               container ({})
                 comp-drag-point (>> states :position)
                   {}
-                    :position $ :position state
+                    :position $ option:unwrap-or (get state :position) nil
                     :unit 1
                     :title |[0,0]
                     :on-change $ fn (p d!)
                       d! cursor $ assoc state :position p
                 comp-drag-point (>> states :edge)
                   {}
-                    :position $ :edge state
+                    :position $ option:unwrap-or (get state :edge) nil
                     :unit 1
                     :title |edge
                     :on-change $ fn (p d!)
                       d! cursor $ assoc state :edge p
                 comp-slider-point (>> states :x0)
                   {}
-                    :value $ :x0 state
+                    :value $ option:unwrap-or (get state :x0) nil
                     :unit 0.1
                     :position $ ->
                       []
-                        first $ :position state
-                        last $ :edge state
+                        option:unwrap-or (first (option:unwrap-or (get state :position) [])) nil
+                        option:unwrap-or (last (option:unwrap-or (get state :edge) [])) nil
                       add-path $ [] 10 20
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :x0 v
                 comp-slider-point (>> states :x1)
                   {}
-                    :value $ :x1 state
+                    :value $ option:unwrap-or (get state :x1) nil
                     :unit 0.1
-                    :position $ -> (:edge state)
+                    :position $ -> (option:unwrap-or (get state :edge) [])
                       add-path $ [] -20 20
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :x1 v
                 comp-slider-point (>> states :y0)
                   {}
-                    :value $ :y0 state
+                    :value $ option:unwrap-or (get state :y0) nil
                     :unit 0.1
                     :position $ ->
                       []
-                        first $ :position state
-                        last $ :edge state
+                        option:unwrap-or (first (option:unwrap-or (get state :position) [])) nil
+                        option:unwrap-or (last (option:unwrap-or (get state :edge) [])) nil
                       add-path $ [] -70 -10
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :y0 v
                 comp-slider-point (>> states :y1)
                   {}
-                    :value $ :y1 state
+                    :value $ option:unwrap-or (get state :y1) nil
                     :unit 0.1
-                    :position $ add-path (:position state) ([] -60 0)
+                    :position $ add-path (option:unwrap-or (get state :position) []) ([] -60 0)
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :y1 v
                 comp-slider (>> states :n)
                   {}
-                    :value $ :n state
+                    :value $ option:unwrap-or (get state :n) nil
                     :unit 0.5
                     :round? true
                     :position $ [] 80 40
@@ -175,7 +176,7 @@
               container
                 {} $ :position ([] 220 20)
                 create-list :container ({})
-                  -> (:funcs state)
+                  -> (option:unwrap-or (get state :funcs) [])
                     map-indexed $ fn (idx func)
                       [] idx $ container ({})
                         rect
@@ -189,7 +190,7 @@
                               :click $ fn (e d!)
                                 request-text! e
                                   {}
-                                    :initial $ :code func
+                                    :initial $ option:unwrap-or (get func :code) nil
                                     :style $ {} (:font-family ui/font-code)
                                   fn (code)
                                     if (.blank? code)
@@ -202,14 +203,14 @@
                                           :tree $ parse-cirru code
                           text $ {}
                             :position $ [] 10 2
-                            :text $ :code func
+                            :text $ option:unwrap-or (get func :code) nil
                             :style $ {}
                               :fill $ hslx 0 0 80
                               :font-family ui/font-code
                               :font-size 12
                 comp-button $ {} (:text |Add)
                   :position $ [] 0
-                    * 24 $ count (:funcs state)
+                    * 24 $ count (option:unwrap-or (get state :funcs) [])
                   :on-pointertap $ fn (e d!) (js/console.log |event e)
                     request-text! e
                       {} (:placeholder "|An expression")
@@ -218,8 +219,10 @@
                         when-not (blank? code)
                           d! cursor $ update state :funcs
                             fn (funcs)
-                              conj funcs $ {} (:code code)
-                                :tree $ parse-cirru code
+                              conj funcs $ assert-type
+                                {} (:code code)
+                                  :tree $ parse-cirru code
+                                'Dynamic
           :examples $ []
           :schema $ :: 'Dynamic
         |square $ %{} 'CodeEntry (:doc |)
@@ -246,17 +249,14 @@
           :schema $ :: 'Dynamic
         |dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn dispatch! (op op-data)
-              if (list? op)
-                recur :states $ [] op op-data
-                do
-                  when
-                    and dev? $ not= op :states
-                    println |dispatch! op op-data
-                  let
-                      op-id $ shortid/generate
-                      op-time $ js/Date.now
-                    reset! *store $ updater @*store op op-data op-id op-time
+            defn dispatch! (op)
+              when
+                and dev? $ not= (nth op 0) :states
+                println |dispatch! op
+              let
+                  op-id $ shortid/generate
+                  op-time $ js/Date.now
+                reset! *store $ updater @*store op op-id op-time
           :examples $ []
           :schema $ :: 'Dynamic
         |global-fonts $ %{} 'CodeEntry (:doc |)
@@ -275,16 +275,16 @@
               add-watch *store :change $ fn (s p) (render-app!)
               .addEventListener js/window |beforeunload persist-store!
               let
-                  raw $ .getItem js/localStorage (:storage-key config/site)
+                  raw $ .getItem js/localStorage |axis
                 when (some? raw)
-                  dispatch! :hydrate-storage $ parse-cirru-edn raw
+                  dispatch! $ :: :hydrate-storage parse-cirru-edn raw
               println "|App Started"
           :examples $ []
           :schema $ :: 'Dynamic
         |persist-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-store! (? e)
-              .setItem js/localStorage (:storage-key config/site) (format-cirru-edn @*store)
+              .setItem js/localStorage |axis (format-cirru-edn @*store)
           :examples $ []
           :schema $ :: 'Dynamic
         |reload! $ %{} 'CodeEntry (:doc |)
@@ -353,15 +353,11 @@
       :defs $ {}
         |updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn updater (store op op-data op-id op-time)
-              case-default op
-                do (println "|unknown op" op op-data) store
-                :add-x $ update store :x
-                  fn (x)
-                    if (> x 10) 0 $ + x 1
-                :tab $ assoc store :tab op-data
-                :states $ update-states store op-data
-                :hydrate-storage op-data
+            defn updater (store op op-id op-time)
+              tag-match op
+                (:states cursor s) (update-states store cursor s)
+                (:hydrate-storage d) d
+                _ $ do (eprintln "|unknown op" op) store
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
