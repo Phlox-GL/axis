@@ -3,7 +3,7 @@
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
-      :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |phlox/ |calc-dsl/ |pointed-prompt/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |phlox/ |calc-dsl/ |pointed-prompt/
       :type-slots $ {}
   :files $ {}
     |app.config $ %{} 'FileEntry
@@ -28,9 +28,12 @@
             defcomp comp-axis (options)
               let-sugar
                   position $ option:unwrap-or (get options :position) nil
-                  ([] w h) $ option:unwrap-or (get options :size) []
-                  ([] x0 x1) $ option:unwrap-or (get options :x-range) []
-                  ([] y0 y1) $ option:unwrap-or (get options :y-range) []
+                  ([] w h)
+                    option:unwrap-or (get options :size) []
+                  ([] x0 x1)
+                    option:unwrap-or (get options :x-range) []
+                  ([] y0 y1)
+                    option:unwrap-or (get options :y-range) []
                   n $ option:unwrap-or (get options :n) nil
                 container
                   {} $ :position position
@@ -45,7 +48,8 @@
                       g :move-to $ [] 0 h
                       g :line-to $ [] w h
                   create-list :container ({})
-                    -> (option:unwrap-or (get options :funcs) [])
+                    ->
+                      option:unwrap-or (get options :funcs) []
                       map-indexed $ fn (idx func)
                         [] idx $ let
                             path $ -> (range n)
@@ -56,7 +60,9 @@
                                         * idx $ - x1 x0
                                         , n
                                     y $ calc-expr
-                                      option:unwrap-or (first (option:unwrap-or (get func :tree) [])) nil
+                                      option:unwrap-or
+                                        first $ option:unwrap-or (get func :tree) []
+                                        , nil
                                       {} $ |x x
                                     mx $ * idx (/ w n)
                                     my $ - h
@@ -80,7 +86,8 @@
               let
                   states $ option:unwrap-or (get store :states) {}
                   cursor $ []
-                  state $ or (option:unwrap-or (get states :data) nil)
+                  state $ or
+                    option:unwrap-or (get states :data) nil
                     {}
                       :position $ [] 100 100
                       :edge $ [] 880 600
@@ -94,9 +101,15 @@
                   {} $ :position ([] -400 -300)
                   comp-axis $ {}
                     :position $ option:unwrap-or (get state :position) nil
-                    :size $ subtract-path (option:unwrap-or (get state :edge) nil) (option:unwrap-or (get state :position) nil)
-                    :x-range $ [] (option:unwrap-or (get state :x0) nil) (option:unwrap-or (get state :x1) nil)
-                    :y-range $ [] (option:unwrap-or (get state :y0) nil) (option:unwrap-or (get state :y1) nil)
+                    :size $ subtract-path
+                      option:unwrap-or (get state :edge) nil
+                      option:unwrap-or (get state :position) nil
+                    :x-range $ []
+                      option:unwrap-or (get state :x0) nil
+                      option:unwrap-or (get state :x1) nil
+                    :y-range $ []
+                      option:unwrap-or (get state :y0) nil
+                      option:unwrap-or (get state :y1) nil
                     :n $ option:unwrap-or (get state :n) nil
                     :funcs $ option:unwrap-or (get state :funcs) []
                   comp-controls cursor states state
@@ -127,8 +140,12 @@
                     :unit 0.1
                     :position $ ->
                       []
-                        option:unwrap-or (first (option:unwrap-or (get state :position) [])) nil
-                        option:unwrap-or (last (option:unwrap-or (get state :edge) [])) nil
+                        option:unwrap-or
+                          first $ option:unwrap-or (get state :position) []
+                          , nil
+                        option:unwrap-or
+                          last $ option:unwrap-or (get state :edge) []
+                          , nil
                       add-path $ [] 10 20
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :x0 v
@@ -136,7 +153,8 @@
                   {}
                     :value $ option:unwrap-or (get state :x1) nil
                     :unit 0.1
-                    :position $ -> (option:unwrap-or (get state :edge) [])
+                    :position $ ->
+                      option:unwrap-or (get state :edge) []
                       add-path $ [] -20 20
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :x1 v
@@ -146,8 +164,12 @@
                     :unit 0.1
                     :position $ ->
                       []
-                        option:unwrap-or (first (option:unwrap-or (get state :position) [])) nil
-                        option:unwrap-or (last (option:unwrap-or (get state :edge) [])) nil
+                        option:unwrap-or
+                          first $ option:unwrap-or (get state :position) []
+                          , nil
+                        option:unwrap-or
+                          last $ option:unwrap-or (get state :edge) []
+                          , nil
                       add-path $ [] -70 -10
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :y0 v
@@ -155,7 +177,9 @@
                   {}
                     :value $ option:unwrap-or (get state :y1) nil
                     :unit 0.1
-                    :position $ add-path (option:unwrap-or (get state :position) []) ([] -60 0)
+                    :position $ add-path
+                      option:unwrap-or (get state :position) []
+                      [] -60 0
                     :on-change $ fn (v d!)
                       d! cursor $ assoc state :y1 v
                 comp-slider (>> states :n)
@@ -176,7 +200,8 @@
               container
                 {} $ :position ([] 220 20)
                 create-list :container ({})
-                  -> (option:unwrap-or (get state :funcs) [])
+                  ->
+                    option:unwrap-or (get state :funcs) []
                     map-indexed $ fn (idx func)
                       [] idx $ container ({})
                         rect
@@ -210,7 +235,8 @@
                               :font-size 12
                 comp-button $ {} (:text |Add)
                   :position $ [] 0
-                    * 24 $ count (option:unwrap-or (get state :funcs) [])
+                    * 24 $ count
+                      option:unwrap-or (get state :funcs) []
                   :on-pointertap $ fn (e d!) (js/console.log |event e)
                     request-text! e
                       {} (:placeholder "|An expression")
@@ -222,7 +248,7 @@
                               conj funcs $ assert-type
                                 {} (:code code)
                                   :tree $ parse-cirru code
-                                'Dynamic
+                                :: 'Dynamic
           :examples $ []
           :schema $ :: 'Dynamic
         |square $ %{} 'CodeEntry (:doc |)
@@ -284,7 +310,7 @@
         |persist-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-store! (? e)
-              .setItem js/localStorage |axis (format-cirru-edn @*store)
+              .setItem js/localStorage |axis $ format-cirru-edn @*store
           :examples $ []
           :schema $ :: 'Dynamic
         |reload! $ %{} 'CodeEntry (:doc |)
