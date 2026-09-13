@@ -1,5 +1,5 @@
 
-{} (:calcit-version |0.13.29)
+{} (:calcit-version |0.14.16)
   :version |0.1.0
   :dependencies $ {} (|Memkits/calc-dsl |0.0.5)
     |Phlox-GL/phlox |0.7.6
