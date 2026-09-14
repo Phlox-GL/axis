@@ -22,7 +22,7 @@
     "vite": "^5.1.6"
   },
   "dependencies": {
-    "@calcit/procs": "0.14.16",
+    "@calcit/procs": "0.14.17",
     "@calcit/std": "^0.0.2",
     "@quamolit/phlox-utils": "^0.0.2",
     "bottom-tip": "^0.1.5",

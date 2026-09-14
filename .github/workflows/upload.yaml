@@ -6,29 +6,49 @@ on:
       - main
   pull_request: {}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5.1.0
 
     - uses: actions/setup-node@v6
       with:
-        node-version: 18
+        node-version: 24
         
     - name: Enable Corepack
-      run: corepack enable && corepack prepare yarn@4.12.0 --activate
+      run: |
+        corepack enable
+        corepack prepare yarn@4.12.0 --activate
+        yarn --version
 
     - uses: calcit-lang/setup-calcit@v1
       with:
         tools: calcit,caps
 
-    - name: "compiles to js"
-      run: >
-        caps --ci && calcit calcit.cirru js
-        && yarn && yarn vite build --base=./
+    - name: Install dependencies
+      run: |
+        caps --strict --ci
+        yarn install --immutable
+        caps verify --toolchain
+
+    - name: Validate Calcit project
+      run: |
+        calcit calcit.cirru edit format
+        git diff --exit-code -- calcit.cirru
+        calcit calcit.cirru --check-only
+        calcit calcit.cirru analyze dynamic-methods --max 0
+
+    - name: Compile to JavaScript
+      run: |
+        calcit calcit.cirru js
+        yarn vite build --base=./
 
     - name: Deploy to server
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       id: deploy
       uses: Pendect/action-rsyncer@v2.0.0
       env:
@@ -41,4 +61,5 @@ jobs:
         dest: 'rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}'
 
     - name: Display status from deploy
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: echo "${{ steps.deploy.outputs.status }}"
