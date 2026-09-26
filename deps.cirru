@@ -1,6 +1,6 @@
 
-{} (:calcit-version |0.18.1)
-  :version |0.1.1
+{} (:calcit-version |0.22.0-alpha.3)
+  :version |0.1.2
   :dependencies $ {} (|Memkits/calc-dsl |0.0.7)
     |Phlox-GL/phlox |0.7.10
     |Respo/respo-ui.calcit |0.7.30

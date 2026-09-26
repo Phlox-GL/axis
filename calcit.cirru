@@ -109,7 +109,9 @@
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state)
             container ({})
@@ -186,7 +188,9 @@
                   :on-change $ fn (v d!)
                     d! cursor $ assoc state :n v
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic
+            :features $ #{} :js-ffi
         'comp-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-funcs (cursor states state)
             container
