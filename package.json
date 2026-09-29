@@ -1,16 +1,14 @@
 {
   "packageManager": "yarn@4.18.0",
   "name": "phlox",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "a PIXI DSL in ClojureScript",
   "main": "index.js",
   "scripts": {
-    "watch": "shadow-cljs watch client test",
-    "build-cdn": "shadow-cljs clj-run build.main/build-cdn",
-    "build": "shadow-cljs clj-run build.main/build",
-    "up": "yarn build-cdn && tiye-up",
-    "page": "shadow-cljs clj-run build.main/page",
-    "ln": "cd target && rm -f entry && ln -s ../entry"
+    "compile": "calcit calcit.cirru js",
+    "build": "vite build",
+    "release": "yarn compile && yarn build",
+    "dev": "calcit calcit.cirru js && vite"
   },
   "repository": {
     "type": "git",
@@ -19,10 +17,10 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
-    "vite": "^6.4.3"
+    "vite": "^8.3.1"
   },
   "dependencies": {
-    "@calcit/procs": "0.18.1",
+    "@calcit/procs": "0.27.0",
     "@calcit/std": "^0.0.2",
     "@quamolit/phlox-utils": "^0.0.2",
     "bottom-tip": "^0.1.5",

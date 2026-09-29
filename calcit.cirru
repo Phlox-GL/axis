@@ -3,7 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |app
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |phlox/ |calc-dsl/ |pointed-prompt/
       :type-slots $ {}
@@ -14,12 +14,12 @@
           :code $ quote $ def dev?
             = |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:cdn-url |http://cdn.tiye.me/axis/) (:title |Axis) (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |axis)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.container $ %{} 'FileEntry
@@ -109,7 +109,8 @@
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state)
             container ({})
@@ -186,7 +187,8 @@
                   :on-change $ fn (v d!)
                     d! cursor $ assoc state :n v
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'List 'Tag) (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
         'comp-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-funcs (cursor states state)
             container
@@ -247,7 +249,8 @@
         'square $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn square (x) (* x x)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] 'Number
         'typed-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-funcs (state)
             unsafe-coerce
