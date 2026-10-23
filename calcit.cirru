@@ -12,7 +12,7 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -49,7 +49,7 @@
                           -> (typed-funcs options)
                             map-indexed $ fn (idx func)
                               [] idx $ let
-                                  expr $ option:unwrap-or
+                                  expr $ .unwrap-or
                                     first $ typed-function-tree func
                                     , nil
                                   path $ -> (range n)
@@ -82,12 +82,12 @@
           :code $ quote $ defcomp comp-container (store)
             let
                 states $ decode-map-as
-                  option:unwrap-or (get store :states) ({})
+                  .unwrap-or (get store :states) ({})
                   :: 'Map 'Tag 'Dynamic
                 cursor $ []
                 state $ decode-map-as
                   or
-                    option:unwrap-or (get states :data) nil
+                    .unwrap-or (get states :data) nil
                     {}
                       :position $ [] 100 100
                       :edge $ [] 880 600
@@ -101,22 +101,22 @@
               container
                 {} $ :position $ [] -400 -300
                 comp-axis $ {}
-                  :position $ option:unwrap-or (get state :position) nil
+                  :position $ .unwrap-or (get state :position) nil
                   :size $ subtract-path
                     decode-map-as
-                      option:unwrap-or (get state :edge) nil
+                      .unwrap-or (get state :edge) nil
                       :: 'List 'Number
                     decode-map-as
-                      option:unwrap-or (get state :position) nil
+                      .unwrap-or (get state :position) nil
                       :: 'List 'Number
                   :x-range $ []
-                    option:unwrap-or (get state :x0) nil
-                    option:unwrap-or (get state :x1) nil
+                    .unwrap-or (get state :x0) nil
+                    .unwrap-or (get state :x1) nil
                   :y-range $ []
-                    option:unwrap-or (get state :y0) nil
-                    option:unwrap-or (get state :y1) nil
-                  :n $ option:unwrap-or (get state :n) nil
-                  :funcs $ option:unwrap-or (get state :funcs) ([])
+                    .unwrap-or (get state :y0) nil
+                    .unwrap-or (get state :y1) nil
+                  :n $ .unwrap-or (get state :n) nil
+                  :funcs $ .unwrap-or (get state :funcs) ([])
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
@@ -131,7 +131,7 @@
               container ({})
                 comp-drag-point (>> states :position)
                   {}
-                    :position $ option:unwrap-or (get state :position) nil
+                    :position $ .unwrap-or (get state :position) nil
                     :unit 1
                     :title |[0,0]
                     :on-change $ fn (p d!)
@@ -139,7 +139,7 @@
                       , &unit
                 comp-drag-point (>> states :edge)
                   {}
-                    :position $ option:unwrap-or (get state :edge) nil
+                    :position $ .unwrap-or (get state :edge) nil
                     :unit 1
                     :title |edge
                     :on-change $ fn (p d!)
@@ -147,7 +147,7 @@
                       , &unit
                 comp-slider-point (>> states :x0)
                   {}
-                    :value $ option:unwrap-or (get state :x0) nil
+                    :value $ .unwrap-or (get state :x0) nil
                     :unit 0.1
                     :position $ ->
                       decode-map-as
@@ -165,7 +165,7 @@
                       , &unit
                 comp-slider-point (>> states :x1)
                   {}
-                    :value $ option:unwrap-or (get state :x1) nil
+                    :value $ .unwrap-or (get state :x1) nil
                     :unit 0.1
                     :position $ -> edge-list $ add-path ([] -20 20)
                     :on-change $ fn (v d!)
@@ -173,7 +173,7 @@
                       , &unit
                 comp-slider-point (>> states :y0)
                   {}
-                    :value $ option:unwrap-or (get state :y0) nil
+                    :value $ .unwrap-or (get state :y0) nil
                     :unit 0.1
                     :position $ ->
                       decode-map-as
@@ -191,7 +191,7 @@
                       , &unit
                 comp-slider-point (>> states :y1)
                   {}
-                    :value $ option:unwrap-or (get state :y1) nil
+                    :value $ .unwrap-or (get state :y1) nil
                     :unit 0.1
                     :position $ add-path position-list $ [] -60 0
                     :on-change $ fn (v d!)
@@ -199,7 +199,7 @@
                       , &unit
                 comp-slider (>> states :n)
                   {}
-                    :value $ option:unwrap-or (get state :n) nil
+                    :value $ .unwrap-or (get state :n) nil
                     :unit 0.5
                     :round? true
                     :position $ [] 80 40
@@ -231,7 +231,7 @@
                             fn (e d!)
                               request-text! e
                                 {}
-                                  :initial $ option:unwrap-or (get func :code) nil
+                                  :initial $ .unwrap-or (get func :code) nil
                                   :style $ {} $ :font-family ui/font-code
                                 fn (code)
                                   hint-fn $ {}
@@ -247,7 +247,7 @@
                                   , &unit
                         text $ {}
                           :position $ [] 10 2
-                          :text $ option:unwrap-or (get func :code) nil
+                          :text $ .unwrap-or (get func :code) nil
                           :style $ {}
                             :fill $ hslx 0 0 80
                             :font-family ui/font-code
@@ -288,7 +288,7 @@
         'typed-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-funcs (state)
             decode-map-as
-              option:unwrap-or (get state :funcs) ([])
+              .unwrap-or (get state :funcs) ([])
               :: 'List $ :: 'Map 'Tag 'Dynamic
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -298,7 +298,7 @@
         'typed-function-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-function-tree (func)
             let
-                raw $ option:unwrap-or (get func :tree) ([])
+                raw $ .unwrap-or (get func :tree) ([])
               if (cirru-quote? raw)
                 &cirru-quote:to-list $ decode-map-as raw 'CirruQuote
                 decode-map-as raw $ :: 'List 'Dynamic
@@ -309,7 +309,7 @@
         'typed-number $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number (options key fallback)
             decode-map-as
-              option:unwrap-or (get options key) fallback
+              .unwrap-or (get options key) fallback
               , 'Number
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
@@ -318,7 +318,7 @@
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
-              option:unwrap-or (get options key) ([])
+              .unwrap-or (get options key) ([])
               :: 'List 'Number
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -373,15 +373,15 @@
             :return $ :: 'JsNullish 'JsObject
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
-            -> (global-fonts)
-              phlox.core/ffi-then $ fn (e) (render-app!)
-            add-watch! *store :change $ fn (s p) (render-app!)
-            browser/add-event-listener! |beforeunload persist-store!
             let
                 storage $ browser/window-local-storage
                 raw $ storage .get-item |axis
               when (js-present? raw)
                 dispatch! $ :: :hydrate-storage $ parse-cirru-edn (ffi/expect-string |axis.storage raw)
+            -> (global-fonts)
+              phlox.core/ffi-then $ fn (e) (render-app!)
+            add-watch! *store :change $ fn (s p) (render-app!)
+            browser/add-event-listener! |beforeunload persist-store!
             println "|App Started"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
