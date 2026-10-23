@@ -373,15 +373,15 @@
             :return $ :: 'JsNullish 'JsObject
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
-            -> (global-fonts)
-              phlox.core/ffi-then $ fn (e) (render-app!)
-            add-watch! *store :change $ fn (s p) (render-app!)
-            browser/add-event-listener! |beforeunload persist-store!
             let
                 storage $ browser/window-local-storage
                 raw $ storage .get-item |axis
               when (js-present? raw)
                 dispatch! $ :: :hydrate-storage $ parse-cirru-edn (ffi/expect-string |axis.storage raw)
+            -> (global-fonts)
+              phlox.core/ffi-then $ fn (e) (render-app!)
+            add-watch! *store :change $ fn (s p) (render-app!)
+            browser/add-event-listener! |beforeunload persist-store!
             println "|App Started"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)

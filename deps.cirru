@@ -1,9 +1,9 @@
 
-{} (:calcit-version |0.30.1-alpha.4)
+{} (:calcit-version |0.30.1)
   :version |0.1.2
-  :dependencies $ {} (|Memkits/calc-dsl |0.0.8)
-    |Phlox-GL/phlox |0.7.14
-    |Respo/respo-ui.calcit |0.7.41
-    |Respo/respo.calcit |0.16.122
-    |mvc-works/pointed-prompt |0.0.19
-    |calcit-lang/js-ffi |0.2.3
+  :dependencies $ {} (|Memkits/calc-dsl |0.0.9)
+    |Phlox-GL/phlox |0.7.17
+    |Respo/respo-ui.calcit |0.8.0
+    |Respo/respo.calcit |0.16.124
+    |mvc-works/pointed-prompt |0.0.20
+    |calcit-lang/js-ffi |0.2.5
