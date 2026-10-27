@@ -239,7 +239,8 @@
                                     :return 'Unit
                                   if (blank? code)
                                     d! $ :: :states cursor $ assoc state :funcs
-                                      concat (slice funcs 0 idx)
+                                      concat
+                                        slice funcs 0 $ Option :some idx
                                         slice funcs $ inc idx
                                     d! $ :: :states cursor $ assoc-in state ([] :funcs idx)
                                       {} (:code code)
@@ -295,17 +296,6 @@
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :features $ #{} :js-ffi
             :return $ :: 'List $ :: 'Map 'Tag 'Dynamic
-        'typed-function-tree $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn typed-function-tree (func)
-            let
-                raw $ .unwrap-or (get func :tree) ([])
-              if (cirru-quote? raw)
-                &cirru-quote:to-list $ decode-map-as raw 'CirruQuote
-                decode-map-as raw $ :: 'List 'Dynamic
-          :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :return $ :: 'List 'Dynamic
         'typed-number $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number (options key fallback)
             decode-map-as
@@ -336,6 +326,7 @@
             respo-ui.core :as ui
             phlox.input :refer $ request-text!
             calc-dsl.core :refer $ calc-expr
+            app.schema :refer $ typed-function-tree
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
@@ -453,13 +444,67 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.math
     'app.schema $ %{} 'FileEntry
-      :defs $ {} $ 'store
-        %{} 'CodeEntry (:doc |)
+      :defs $ {}
+        'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} (:tab :drafts) (:x 0)
               :states $ {}
           :examples $ []
           :schema $ :: 'Map 'Tag 'Dynamic
+        'typed-function-tree $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn typed-function-tree (func)
+            let
+                raw $ .unwrap-or (get func :tree) ([])
+              if (cirru-quote? raw)
+                match
+                  .to-list $ decode-map-as raw 'CirruQuote
+                  (:some tree) tree
+                  (:none)
+                    raise "|Expected a list-root CirruQuote for function tree"
+                decode-map-as raw $ :: 'List 'Dynamic
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'List 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-stored-tree-and-roundtrip)
+              :code $ quote $ match (.parse-cirru "|+ x (* x x)")
+                (:ok tree)
+                  let
+                      stored $ {} (:code "|+ x 999") (:tree tree)
+                      restored $ decode-map-as
+                        parse-cirru-edn $ format-cirru-edn stored
+                        :: 'Map 'Tag 'Dynamic
+                      expected $ [] $ [] |+ |x ([] |* |x |x)
+                    assert= expected $ typed-function-tree stored
+                    assert= expected $ typed-function-tree restored
+                    assert-type (typed-function-tree restored) (:: 'List 'Dynamic)
+                (:err message) (raise message)
+              :tags $ #{} :saved-tree :unit
+            %{} 'TestEntry (:name |preserves-list-and-empty-values)
+              :code $ quote $ let
+                  rows $ [] $ [] |:key ||pipe "|中文"
+                assert= rows $ typed-function-tree $ {} (:tree rows)
+                assert= ([])
+                  typed-function-tree $ {} $ :tree ([])
+                assert= ([])
+                  typed-function-tree $ {}
+                assert= ([])
+                  typed-function-tree $ {} $ :tree
+                    cirru-quote $
+              :tags $ #{} :saved-tree :unit
+            %{} 'TestEntry (:name |rejects-leaf-roots)
+              :code $ quote $ assert= "|Expected a list-root CirruQuote for function tree"
+                try
+                  do
+                    typed-function-tree $ {} $ :tree (cirru-quote token)
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+              :tags $ #{} :saved-tree :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
