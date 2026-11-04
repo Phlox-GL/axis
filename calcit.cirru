@@ -14,12 +14,12 @@
           :code $ quote $ def dev?
             = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:cdn-url |http://cdn.tiye.me/axis/) (:title |Axis) (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |axis)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.container $ %{} 'FileEntry
@@ -75,15 +75,13 @@
                                             :width 1
                                         -> path rest $ map $ fn (point) (g :line-to point)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             let
                 states $ decode-map-as
                   .unwrap-or (get store :states) ({})
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
                 cursor $ []
                 state $ decode-map-as
                   or
@@ -97,7 +95,7 @@
                       :y1 1
                       :n 100
                       :funcs $ []
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
               container
                 {} $ :position $ [] -400 -300
                 comp-axis $ {}
@@ -105,10 +103,10 @@
                   :size $ subtract-path
                     decode-map-as
                       .unwrap-or (get state :edge) nil
-                      :: 'List 'Number
+                      quote $ List Number
                     decode-map-as
                       .unwrap-or (get state :position) nil
-                      :: 'List 'Number
+                      quote $ List Number
                   :x-range $ []
                     .unwrap-or (get state :x0) nil
                     .unwrap-or (get state :x1) nil
@@ -120,9 +118,7 @@
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state)
             let
@@ -158,7 +154,7 @@
                           match (last edge-list)
                             (:some coordinate) coordinate
                             (:none) nil
-                        :: 'List 'Number
+                        quote $ List Number
                       add-path $ [] 10 20
                     :on-change $ fn (v d!)
                       d! $ :: :states cursor $ assoc state :x0 v
@@ -184,7 +180,7 @@
                           match (last edge-list)
                             (:some coordinate) coordinate
                             (:none) nil
-                        :: 'List 'Number
+                        quote $ List Number
                       add-path $ [] -70 -10
                     :on-change $ fn (v d!)
                       d! $ :: :states cursor $ assoc state :y0 v
@@ -209,9 +205,7 @@
                       d! $ :: :states cursor $ assoc state :n v
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] (:: 'List 'Tag) (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Tag) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-funcs (cursor states state)
             let
@@ -234,9 +228,7 @@
                                   :initial $ .unwrap-or (get func :code) nil
                                   :style $ {} $ :font-family ui/font-code
                                 fn (code)
-                                  hint-fn $ {}
-                                    :args $ [] 'String
-                                    :return 'Unit
+                                  hint-fn $ Fn String $ -> Unit
                                   if (blank? code)
                                     d! $ :: :states cursor $ assoc state :funcs
                                       concat
@@ -260,61 +252,51 @@
                       {} (:placeholder "|An expression")
                         :style $ {} $ :font-family ui/font-code
                       fn (code)
-                        hint-fn $ {}
-                          :args $ [] 'String
-                          :return 'Unit
+                        hint-fn $ Fn String $ -> Unit
                         when-not (blank? code)
                           d! $ :: :states cursor $ assoc state :funcs
                             conj funcs $ {} (:code code)
                               :tree $ parse-function-code code
                         , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] (:: 'List 'Dynamic) (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Dynamic) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'parse-function-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-function-code (code)
             match (.parse-cirru-list code)
               (:ok tree) tree
               (:err message) (raise message)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'String
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn String
+            -> $ List Dynamic
         'square $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn square (x) (* x x)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] 'Number
+          :schema $ quote $ Fn Number (-> Number)
         'typed-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-funcs (state)
             decode-map-as
               .unwrap-or (get state :funcs) ([])
-              :: 'List $ :: 'Map 'Tag 'Dynamic
+              quote $ List $ Map Tag Dynamic
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ List $ Map Tag Dynamic
+            :features :js-ffi
         'typed-number $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number (options key fallback)
             decode-map-as
               .unwrap-or (get options key) fallback
               , 'Number
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Tag 'Number
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (Map Tag Dynamic) Tag Number (-> Number) (:features :js-ffi)
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
               .unwrap-or (get options key) ([])
-              :: 'List 'Number
+              quote $ List Number
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Tag
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (Map Tag Dynamic) Tag
+            -> $ List Number
+            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
@@ -332,7 +314,7 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             if (enum? op)
@@ -349,19 +331,16 @@
                 , &unit
               raise "|Expected an Enum operation"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
         'global-fonts $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn global-fonts ()
             js/Promise.all $ js-array
               phlox.core/ffi-load-font $ new FontFaceObserver "|Josefin Sans"
               phlox.core/ffi-load-font $ new FontFaceObserver |Hind
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'JsObject
+          :schema $ quote $ Fn
+            -> $ JsNullish JsObject
+            :features :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             let
@@ -375,18 +354,14 @@
             browser/add-event-listener! |beforeunload persist-store!
             println "|App Started"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'persist-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-store! (e)
             let
                 storage $ browser/window-local-storage
               storage .set-item! |axis $ format-cirru-edn @*store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -397,20 +372,17 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store) dispatch! $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'render-app-with-options! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app-with-options! (options)
             render! (comp-container @*store) dispatch! options
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI) (|shortid :as shortid)
@@ -431,16 +403,14 @@
           :code $ quote $ defn add-path (p0 p1)
             let[] (a b) p0 $ let[] (x y) p1 $ [] (+ a x) (+ b y)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Number) (:: 'List 'Number)
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (List Number) (List Number)
+            -> $ List Number
         'subtract-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn subtract-path (p0 p1)
             let[] (a b) p0 $ let[] (x y) p1 $ [] (- a x) (- b y)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Number) (:: 'List 'Number)
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (List Number) (List Number)
+            -> $ List Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.math
     'app.schema $ %{} 'FileEntry
@@ -450,7 +420,7 @@
             {} (:tab :drafts) (:x 0)
               :states $ {}
           :examples $ []
-          :schema $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Map Tag Dynamic
         'typed-function-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-function-tree (func)
             let
@@ -461,11 +431,10 @@
                   (:some tree) tree
                   (:none)
                     raise "|Expected a list-root CirruQuote for function tree"
-                decode-map-as raw $ :: 'List 'Dynamic
+                decode-map-as raw $ quote $ List Dynamic
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ List Dynamic
           :tests $ []
             %{} 'TestEntry (:name |preserves-stored-tree-and-roundtrip)
               :code $ quote $ match (.parse-cirru "|+ x (* x x)")
@@ -474,11 +443,12 @@
                       stored $ {} (:code "|+ x 999") (:tree tree)
                       restored $ decode-map-as
                         parse-cirru-edn $ format-cirru-edn stored
-                        :: 'Map 'Tag 'Dynamic
+                        quote $ Map Tag Dynamic
                       expected $ [] $ [] |+ |x ([] |* |x |x)
                     assert= expected $ typed-function-tree stored
                     assert= expected $ typed-function-tree restored
-                    assert-type (typed-function-tree restored) (:: 'List 'Dynamic)
+                    assert-type (typed-function-tree restored)
+                      quote $ List Dynamic
                 (:err message) (raise message)
               :tags $ #{} :saved-tree :unit
             %{} 'TestEntry (:name |preserves-list-and-empty-values)
@@ -500,9 +470,7 @@
                     typed-function-tree $ {} $ :tree (cirru-quote token)
                     , |unexpected-success
                   fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
+                    hint-fn $ Fn String $ -> String
                     , message
               :tags $ #{} :saved-tree :unit
       :ns $ %{} 'NsEntry (:doc |)
@@ -514,15 +482,14 @@
             match op
               (:states cursor s)
                 update-states store
-                  decode-map-as cursor $ :: 'List 'Dynamic
+                  decode-map-as cursor $ quote $ List Dynamic
                   , s
               (:hydrate-storage d)
-                decode-map-as d $ :: 'Map 'Tag 'Dynamic
+                decode-map-as d $ quote $ Map Tag Dynamic
               _ $ do (eprintln "|unknown op" op) store
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Enum 'String 'Number
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) Enum String Number
+            -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ phlox.cursor :refer $ update-states
