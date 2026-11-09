@@ -264,7 +264,7 @@
                               :tree $ parse-function-code code
                         , &unit
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'parse-function-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-function-code (code)
             match (.parse-cirru-list code)
@@ -333,7 +333,7 @@
                 match op
                   (:states cursor data)
                     apply-op $ app.schema/Op :states
-                      decode-map-as cursor $ List Dynamic
+                      decode-map-as cursor $ List respo.schema/CoordKey
                       decode-map-as data $ Map Tag Dynamic
                   (:hydrate-storage data)
                     apply-op $ app.schema/Op :hydrate-storage $ decode-map-as data (Map Tag Dynamic)
@@ -436,7 +436,7 @@
           :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (List Dynamic) (Map Tag Dynamic)
+            :states (List respo.schema/CoordKey) (Map Tag Dynamic)
             :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
