@@ -27,12 +27,12 @@
         'comp-axis $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-axis (options)
             let
-                position $ typed-number-list options :position
-              let[] (w h) (typed-number-list options :size)
-                let[] (x0 x1) (typed-number-list options :x-range)
-                  let[] (y0 y1) (typed-number-list options :y-range)
+                position $ options :position
+              let[] (w h) (options :size)
+                let[] (x0 x1) (options :x-range)
+                  let[] (y0 y1) (options :y-range)
                     let
-                        n $ typed-number options :n 1
+                        n $ options :n
                       container
                         {} $ :position position
                         graphics $ {} $ :ops
@@ -46,19 +46,20 @@
                             g :move-to $ [] 0 h
                             g :line-to $ [] w h
                         create-list :container ({})
-                          -> (typed-funcs options)
+                          -> (options :funcs)
                             map-indexed $ fn (idx func)
                               [] idx $ let
-                                  expr $ .unwrap-or
-                                    first $ typed-function-tree func
-                                    , nil
+                                  expr $ first func
                                   path $ -> (range n)
                                     map $ fn (idx)
                                       let
                                           x $ + x0 $ /
                                             * idx $ - x1 x0
                                             , n
-                                          y $ calc-expr expr $ {} (|x x)
+                                          y $ match expr
+                                            (:some expression)
+                                              calc-expr expression $ {} $ |x x
+                                            (:none) (raise "|Expected a function expression")
                                           mx $ * idx $ / w n
                                           my $ - h $ * h
                                             / (- y y0) (- y1 y0)
@@ -75,46 +76,54 @@
                                             :width 1
                                         -> path rest $ map $ fn (point) (g :line-to point)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/AxisOptions (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             let
                 states $ decode-map-as
                   .unwrap-or (get store :states) ({})
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
                 cursor $ []
+                default-state $ {}
+                  :position $ [] 100 100
+                  :edge $ [] 880 600
+                  :x0 -1
+                  :x1 4
+                  :y0 0
+                  :y1 1
+                  :n 100
+                  :funcs $ []
                 state $ decode-map-as
-                  or
-                    .unwrap-or (get states :data) nil
-                    {}
-                      :position $ [] 100 100
-                      :edge $ [] 880 600
-                      :x0 -1
-                      :x1 4
-                      :y0 0
-                      :y1 1
-                      :n 100
-                      :funcs $ []
-                  quote $ Map Tag Dynamic
+                  match (get states :data)
+                    (:some stored) (or stored default-state)
+                    (:none) default-state
+                  Map Tag Dynamic
               container
                 {} $ :position $ [] -400 -300
-                comp-axis $ {}
-                  :position $ .unwrap-or (get state :position) nil
-                  :size $ subtract-path
-                    decode-map-as
-                      .unwrap-or (get state :edge) nil
-                      quote $ List Number
-                    decode-map-as
-                      .unwrap-or (get state :position) nil
-                      quote $ List Number
-                  :x-range $ []
-                    .unwrap-or (get state :x0) nil
-                    .unwrap-or (get state :x1) nil
-                  :y-range $ []
-                    .unwrap-or (get state :y0) nil
-                    .unwrap-or (get state :y1) nil
-                  :n $ .unwrap-or (get state :n) nil
-                  :funcs $ .unwrap-or (get state :funcs) ([])
+                let
+                    position $ decode-map-as
+                      .unwrap $ get state :position
+                      List Number
+                  comp-axis $ %{} app.schema/AxisOptions (:position position)
+                    :size $ subtract-path
+                      decode-map-as
+                        .unwrap $ get state :edge
+                        List Number
+                      , position
+                    :x-range $ decode-map-as
+                      []
+                        .unwrap $ get state :x0
+                        .unwrap $ get state :x1
+                      List Number
+                    :y-range $ decode-map-as
+                      []
+                        .unwrap $ get state :y0
+                        .unwrap $ get state :y1
+                      List Number
+                    :n $ decode-map-as
+                      .unwrap $ get state :n
+                      , 'Number
+                    :funcs $ map (typed-funcs state) typed-function-tree
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
@@ -126,83 +135,75 @@
                 edge-list $ typed-number-list state :edge
               container ({})
                 comp-drag-point (>> states :position)
-                  {}
-                    :position $ .unwrap-or (get state :position) nil
-                    :unit 1
-                    :title |[0,0]
+                  {} (:position position-list) (:unit 1) (:title |[0,0])
                     :on-change $ fn (p d!)
-                      d! $ :: :states cursor $ assoc state :position p
+                      d! $ app.schema/Op :states cursor $ assoc state :position p
                       , &unit
                 comp-drag-point (>> states :edge)
-                  {}
-                    :position $ .unwrap-or (get state :edge) nil
-                    :unit 1
-                    :title |edge
+                  {} (:position edge-list) (:unit 1) (:title |edge)
                     :on-change $ fn (p d!)
-                      d! $ :: :states cursor $ assoc state :edge p
+                      d! $ app.schema/Op :states cursor $ assoc state :edge p
                       , &unit
                 comp-slider-point (>> states :x0)
                   {}
-                    :value $ .unwrap-or (get state :x0) nil
+                    :value $ decode-map-as
+                      .unwrap $ get state :x0
+                      , Number
                     :unit 0.1
                     :position $ ->
-                      decode-map-as
-                        []
-                          match (first position-list)
-                            (:some coordinate) coordinate
-                            (:none) nil
-                          match (last edge-list)
-                            (:some coordinate) coordinate
-                            (:none) nil
-                        quote $ List Number
+                      []
+                        .unwrap $ first position-list
+                        .unwrap $ last edge-list
                       add-path $ [] 10 20
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :x0 v
+                      d! $ app.schema/Op :states cursor $ assoc state :x0 v
                       , &unit
                 comp-slider-point (>> states :x1)
                   {}
-                    :value $ .unwrap-or (get state :x1) nil
+                    :value $ decode-map-as
+                      .unwrap $ get state :x1
+                      , Number
                     :unit 0.1
                     :position $ -> edge-list $ add-path ([] -20 20)
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :x1 v
+                      d! $ app.schema/Op :states cursor $ assoc state :x1 v
                       , &unit
                 comp-slider-point (>> states :y0)
                   {}
-                    :value $ .unwrap-or (get state :y0) nil
+                    :value $ decode-map-as
+                      .unwrap $ get state :y0
+                      , Number
                     :unit 0.1
                     :position $ ->
-                      decode-map-as
-                        []
-                          match (first position-list)
-                            (:some coordinate) coordinate
-                            (:none) nil
-                          match (last edge-list)
-                            (:some coordinate) coordinate
-                            (:none) nil
-                        quote $ List Number
+                      []
+                        .unwrap $ first position-list
+                        .unwrap $ last edge-list
                       add-path $ [] -70 -10
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :y0 v
+                      d! $ app.schema/Op :states cursor $ assoc state :y0 v
                       , &unit
                 comp-slider-point (>> states :y1)
                   {}
-                    :value $ .unwrap-or (get state :y1) nil
+                    :value $ decode-map-as
+                      .unwrap $ get state :y1
+                      , Number
                     :unit 0.1
                     :position $ add-path position-list $ [] -60 0
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :y1 v
+                      d! $ app.schema/Op :states cursor $ assoc state :y1 v
                       , &unit
                 comp-slider (>> states :n)
                   {}
-                    :value $ .unwrap-or (get state :n) nil
+                    :value $ decode-map-as
+                      .unwrap $ get state :n
+                      , Number
                     :unit 0.5
                     :round? true
                     :position $ [] 80 40
                     :min 2
                     :title |n
                     :on-change $ fn (v d!)
-                      d! $ :: :states cursor $ assoc state :n v
+                      d! $ app.schema/Op :states cursor $ assoc state :n v
                       , &unit
           :examples $ []
           :schema $ quote $ Fn (List Tag) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
@@ -225,22 +226,26 @@
                             fn (e d!)
                               request-text! e
                                 {}
-                                  :initial $ .unwrap-or (get func :code) nil
+                                  :initial $ decode-map-as
+                                    .unwrap-or (get func :code) |
+                                    , String
                                   :style $ {} $ :font-family ui/font-code
                                 fn (code)
                                   hint-fn $ Fn String $ -> Unit
                                   if (blank? code)
-                                    d! $ :: :states cursor $ assoc state :funcs
+                                    d! $ app.schema/Op :states cursor $ assoc state :funcs
                                       concat
                                         slice funcs 0 $ Option :some idx
                                         slice funcs $ inc idx
-                                    d! $ :: :states cursor $ assoc-in state ([] :funcs idx)
+                                    d! $ app.schema/Op :states cursor $ assoc-in state ([] :funcs idx)
                                       {} (:code code)
                                         :tree $ parse-function-code code
                                   , &unit
                         text $ {}
                           :position $ [] 10 2
-                          :text $ .unwrap-or (get func :code) nil
+                          :text $ decode-map-as
+                            .unwrap-or (get func :code) |
+                            , String
                           :style $ {}
                             :fill $ hslx 0 0 80
                             :font-family ui/font-code
@@ -254,7 +259,7 @@
                       fn (code)
                         hint-fn $ Fn String $ -> Unit
                         when-not (blank? code)
-                          d! $ :: :states cursor $ assoc state :funcs
+                          d! $ app.schema/Op :states cursor $ assoc state :funcs
                             conj funcs $ {} (:code code)
                               :tree $ parse-function-code code
                         , &unit
@@ -263,11 +268,12 @@
         'parse-function-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-function-code (code)
             match (.parse-cirru-list code)
-              (:ok tree) tree
+              (:ok tree)
+                decode-map-as tree $ List calc-dsl.core/Expr
               (:err message) (raise message)
           :examples $ []
           :schema $ quote $ Fn String
-            -> $ List Dynamic
+            -> $ List calc-dsl.core/Expr
         'square $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn square (x) (* x x)
           :examples $ []
@@ -276,23 +282,16 @@
           :code $ quote $ defn typed-funcs (state)
             decode-map-as
               .unwrap-or (get state :funcs) ([])
-              quote $ List $ Map Tag Dynamic
+              List $ Map Tag Dynamic
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
             -> $ List $ Map Tag Dynamic
             :features :js-ffi
-        'typed-number $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn typed-number (options key fallback)
-            decode-map-as
-              .unwrap-or (get options key) fallback
-              , 'Number
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Tag Number (-> Number) (:features :js-ffi)
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
               .unwrap-or (get options key) ([])
-              quote $ List Number
+              List Number
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Tag
             -> $ List Number
@@ -317,30 +316,40 @@
           :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            if (enum? op)
-              do
-                when
-                  and dev? $ match op
-                    (:states _ _) false
-                    _ true
-                  println |dispatch! op
-                let
-                    op-id $ decode-map-as (shortid/generate) 'String
-                    op-time $ decode-map-as (js/Date.now) 'Number
-                  reset! *store $ updater @*store op op-id op-time
-                , &unit
-              raise "|Expected an Enum operation"
+            let
+                apply-op $ fn (operation)
+                  hint-fn $ Fn app.schema/Op $ -> Unit
+                  when
+                    and dev? $ match op
+                      (:states _ _) false
+                      _ true
+                    println |dispatch! op
+                  let
+                      op-id $ decode-map-as (shortid/generate) 'String
+                      op-time $ decode-map-as (js/Date.now) 'Number
+                    reset! *store $ updater @*store operation op-id op-time
+                  , &unit
+              if (enum? op)
+                match op
+                  (:states cursor data)
+                    apply-op $ app.schema/Op :states
+                      decode-map-as cursor $ List Dynamic
+                      decode-map-as data $ Map Tag Dynamic
+                  (:hydrate-storage data)
+                    apply-op $ app.schema/Op :hydrate-storage $ decode-map-as data (Map Tag Dynamic)
+                  _ $ do (eprintln "|unknown op" op) &unit
+                raise "|Expected an Enum operation"
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
         'global-fonts $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn global-fonts ()
-            js/Promise.all $ js-array
-              phlox.core/ffi-load-font $ new FontFaceObserver "|Josefin Sans"
-              phlox.core/ffi-load-font $ new FontFaceObserver |Hind
+            js-cast
+              js/Promise.all $ js-array
+                phlox.core/ffi-load-font $ new FontFaceObserver "|Josefin Sans"
+                phlox.core/ffi-load-font $ new FontFaceObserver |Hind
+              , 'phlox.core/PromiseHost
           :examples $ []
-          :schema $ quote $ Fn
-            -> $ JsNullish JsObject
-            :features :js-ffi
+          :schema $ quote $ Fn (-> phlox.core/PromiseHost) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             let
@@ -361,7 +370,7 @@
                 storage $ browser/window-local-storage
               storage .set-item! |axis $ format-cirru-edn @*store
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -415,6 +424,22 @@
         :code $ quote $ ns app.math
     'app.schema $ %{} 'FileEntry
       :defs $ {}
+        'AxisOptions $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct AxisOptions
+            :position $ List Number
+            :size $ List Number
+            :x-range $ List Number
+            :y-range $ List Number
+            :n Number
+            :funcs $ List $ List calc-dsl.core/Expr
+          :examples $ []
+          :schema $ quote StructDef
+        'Op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum Op
+            :states (List Dynamic) (Map Tag Dynamic)
+            :hydrate-storage $ Map Tag Dynamic
+          :examples $ []
+          :schema $ quote EnumDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} (:tab :drafts) (:x 0)
@@ -428,13 +453,14 @@
               if (cirru-quote? raw)
                 match
                   .to-list $ decode-map-as raw 'CirruQuote
-                  (:some tree) tree
+                  (:some tree)
+                    decode-map-as tree $ List calc-dsl.core/Expr
                   (:none)
                     raise "|Expected a list-root CirruQuote for function tree"
-                decode-map-as raw $ quote $ List Dynamic
+                decode-map-as raw $ List calc-dsl.core/Expr
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ List Dynamic
+            -> $ List calc-dsl.core/Expr
           :tests $ []
             %{} 'TestEntry (:name |preserves-stored-tree-and-roundtrip)
               :code $ quote $ match (.parse-cirru "|+ x (* x x)")
@@ -443,12 +469,11 @@
                       stored $ {} (:code "|+ x 999") (:tree tree)
                       restored $ decode-map-as
                         parse-cirru-edn $ format-cirru-edn stored
-                        quote $ Map Tag Dynamic
+                        Map Tag Dynamic
                       expected $ [] $ [] |+ |x ([] |* |x |x)
                     assert= expected $ typed-function-tree stored
                     assert= expected $ typed-function-tree restored
-                    assert-type (typed-function-tree restored)
-                      quote $ List Dynamic
+                    assert-type (typed-function-tree restored) (List Dynamic)
                 (:err message) (raise message)
               :tags $ #{} :saved-tree :unit
             %{} 'TestEntry (:name |preserves-list-and-empty-values)
@@ -473,6 +498,17 @@
                     hint-fn $ Fn String $ -> String
                     , message
               :tags $ #{} :saved-tree :unit
+            %{} 'TestEntry (:name |rejects-non-text-leaf)
+              :code $ quote $ assert= true
+                try
+                  do
+                    typed-function-tree $ {} $ :tree
+                      [] $ [] |+ 1
+                    , false
+                  fn (message)
+                    hint-fn $ Fn String $ -> Bool
+                    .includes? message |decode-map-as
+              :tags $ #{} :saved-tree :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
@@ -480,15 +516,10 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
-              (:states cursor s)
-                update-states store
-                  decode-map-as cursor $ quote $ List Dynamic
-                  , s
-              (:hydrate-storage d)
-                decode-map-as d $ quote $ Map Tag Dynamic
-              _ $ do (eprintln "|unknown op" op) store
+              (:states cursor data) (update-states store cursor data)
+              (:hydrate-storage data) data
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Enum String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) app.schema/Op String Number
             -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
