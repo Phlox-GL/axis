@@ -27,12 +27,12 @@
         'comp-axis $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-axis (options)
             let
-                position $ typed-number-list options :position
-              let[] (w h) (typed-number-list options :size)
-                let[] (x0 x1) (typed-number-list options :x-range)
-                  let[] (y0 y1) (typed-number-list options :y-range)
+                position $ options :position
+              let[] (w h) (options :size)
+                let[] (x0 x1) (options :x-range)
+                  let[] (y0 y1) (options :y-range)
                     let
-                        n $ typed-number options :n 1
+                        n $ options :n
                       container
                         {} $ :position position
                         graphics $ {} $ :ops
@@ -46,10 +46,10 @@
                             g :move-to $ [] 0 h
                             g :line-to $ [] w h
                         create-list :container ({})
-                          -> (typed-funcs options)
+                          -> (options :funcs)
                             map-indexed $ fn (idx func)
                               [] idx $ let
-                                  expr $ first $ typed-function-tree func
+                                  expr $ first func
                                   path $ -> (range n)
                                     map $ fn (idx)
                                       let
@@ -76,7 +76,7 @@
                                             :width 1
                                         -> path rest $ map $ fn (point) (g :line-to point)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/AxisOptions (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             let
@@ -94,37 +94,36 @@
                   :n 100
                   :funcs $ []
                 state $ decode-map-as
-                  or
-                    .unwrap $ get states :data
-                    {}
-                      :position $ [] 100 100
-                      :edge $ [] 880 600
-                      :x0 -1
-                      :x1 4
-                      :y0 0
-                      :y1 1
-                      :n 100
-                      :funcs $ []
+                  match (get states :data)
+                    (:some stored) (or stored default-state)
+                    (:none) default-state
                   Map Tag Dynamic
               container
                 {} $ :position $ [] -400 -300
-                comp-axis $ {}
-                  :position $ .unwrap $ get state :position
-                  :size $ subtract-path
-                    decode-map-as
-                      .unwrap $ get state :edge
-                      List Number
-                    decode-map-as
+                let
+                    position $ decode-map-as
                       .unwrap $ get state :position
                       List Number
-                  :x-range $ []
-                    .unwrap $ get state :x0
-                    .unwrap $ get state :x1
-                  :y-range $ []
-                    .unwrap $ get state :y0
-                    .unwrap $ get state :y1
-                  :n $ .unwrap $ get state :n
-                  :funcs $ .unwrap-or (get state :funcs) ([])
+                  comp-axis $ %{} app.schema/AxisOptions (:position position)
+                    :size $ subtract-path
+                      decode-map-as
+                        .unwrap $ get state :edge
+                        List Number
+                      , position
+                    :x-range $ decode-map-as
+                      []
+                        .unwrap $ get state :x0
+                        .unwrap $ get state :x1
+                      List Number
+                    :y-range $ decode-map-as
+                      []
+                        .unwrap $ get state :y0
+                        .unwrap $ get state :y1
+                      List Number
+                    :n $ decode-map-as
+                      .unwrap $ get state :n
+                      , 'Number
+                    :funcs $ map (typed-funcs state) typed-function-tree
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
@@ -288,13 +287,6 @@
           :schema $ quote $ Fn (Map Tag Dynamic)
             -> $ List $ Map Tag Dynamic
             :features :js-ffi
-        'typed-number $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn typed-number (options key fallback)
-            decode-map-as
-              .unwrap-or (get options key) fallback
-              , 'Number
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Tag Number (-> Number) (:features :js-ffi)
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
@@ -378,7 +370,7 @@
                 storage $ browser/window-local-storage
               storage .set-item! |axis $ format-cirru-edn @*store
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -432,6 +424,16 @@
         :code $ quote $ ns app.math
     'app.schema $ %{} 'FileEntry
       :defs $ {}
+        'AxisOptions $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct AxisOptions
+            :position $ List Number
+            :size $ List Number
+            :x-range $ List Number
+            :y-range $ List Number
+            :n Number
+            :funcs $ List $ List calc-dsl.core/Expr
+          :examples $ []
+          :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List Dynamic) (Map Tag Dynamic)
