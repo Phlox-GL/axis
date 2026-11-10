@@ -440,6 +440,10 @@
             :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
+        'SavedFunctionTree $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion SavedFunctionTree CirruQuote (List calc-dsl.core/Expr)
+          :examples $ []
+          :schema $ quote UnionDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} (:tab :drafts) (:x 0)
@@ -448,16 +452,17 @@
           :schema $ quote $ Map Tag Dynamic
         'typed-function-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-function-tree (func)
-            let
-                raw $ .unwrap-or (get func :tree) ([])
-              if (cirru-quote? raw)
-                match
-                  .to-list $ decode-map-as raw 'CirruQuote
+            match
+              decode-map-as
+                .unwrap-or (get func :tree) ([])
+                , SavedFunctionTree
+              (CirruQuote saved)
+                match (.to-list saved)
                   (:some tree)
                     decode-map-as tree $ List calc-dsl.core/Expr
                   (:none)
                     raise "|Expected a list-root CirruQuote for function tree"
-                decode-map-as raw $ List calc-dsl.core/Expr
+              (List tree) tree
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
             -> $ List calc-dsl.core/Expr
@@ -473,7 +478,7 @@
                       expected $ [] $ [] |+ |x ([] |* |x |x)
                     assert= expected $ typed-function-tree stored
                     assert= expected $ typed-function-tree restored
-                    assert-type (typed-function-tree restored) (List Dynamic)
+                    assert-type (typed-function-tree restored) (List calc-dsl.core/Expr)
                 (:err message) (raise message)
               :tags $ #{} :saved-tree :unit
             %{} 'TestEntry (:name |preserves-list-and-empty-values)
