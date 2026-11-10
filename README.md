@@ -2,15 +2,15 @@
 Axis, for displaying curves
 ----
 
-### 0.38.0 使用者影响
+### 0.40.0 使用者影响
 
-使用配对的正式 Calcit 和 JS runtime 0.38.0。绘图参数和公式树在进入绘图组件前完成类型校验，旧存档仍使用同一 `axis` 键、Cirru EDN 格式和缓存树。热更新继续在页面显示错误提示。
+使用配对的正式 Calcit 和 JS runtime 0.40.0。绘图参数和公式树在进入绘图组件前完成类型校验，旧存档仍使用同一 `axis` 键、Cirru EDN 格式和缓存树。热更新继续在页面显示错误提示。
 
 Phlox 的按钮文字可见性问题仍由 [Phlox #71](https://github.com/Phlox-GL/phlox/issues/71) 跟踪。
 
 ### Workflow
 
-使用配对的正式 Calcit/procs 0.38.0、Node.js 24 与 Yarn 4.18.0，仅维护 `calcit.cirru` / `deps.cirru`。升级后重启开发服务并刷新页面，不混用旧 runtime 或模块缓存。
+使用配对的正式 Calcit/procs 0.40.0、Node.js 24 与 Yarn 4.18.0，仅维护 `calcit.cirru` / `deps.cirru`。升级后重启开发服务并刷新页面，不混用旧 runtime 或模块缓存。
 
 ```sh
 caps --strict --ci
