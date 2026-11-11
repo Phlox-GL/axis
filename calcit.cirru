@@ -235,7 +235,7 @@
                                   if (blank? code)
                                     d! $ app.schema/Op :states cursor $ assoc state :funcs
                                       concat
-                                        slice funcs 0 $ Option :some idx
+                                        slice funcs 0 $ Some idx
                                         slice funcs $ inc idx
                                     d! $ app.schema/Op :states cursor $ assoc-in state ([] :funcs idx)
                                       {} (:code code)
@@ -284,8 +284,9 @@
               .unwrap-or (get state :funcs) ([])
               List $ Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Tag V)
             -> $ List $ Map Tag Dynamic
+            :generics V
             :features :js-ffi
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
@@ -293,8 +294,9 @@
               .unwrap-or (get options key) ([])
               List Number
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Tag
+          :schema $ quote $ Fn (Map Tag V) Tag
             -> $ List Number
+            :generics V
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
@@ -370,7 +372,7 @@
                 storage $ browser/window-local-storage
               storage .set-item! |axis $ format-cirru-edn @*store
           :examples $ []
-          :schema $ quote $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn browser/EventHost (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -464,8 +466,9 @@
                     raise "|Expected a list-root CirruQuote for function tree"
               (List tree) tree
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Tag V)
             -> $ List calc-dsl.core/Expr
+            :generics V
           :tests $ []
             %{} 'TestEntry (:name |preserves-stored-tree-and-roundtrip)
               :code $ quote $ match (.parse-cirru "|+ x (* x x)")
