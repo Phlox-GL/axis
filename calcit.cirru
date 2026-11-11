@@ -127,7 +127,7 @@
                 comp-controls cursor states state
                 comp-funcs cursor states state
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi)
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state)
             let
@@ -251,7 +251,7 @@
                             :font-family ui/font-code
                             :font-size 12
                 comp-button $ {} (:text |Add)
-                  :position $ [] 0 $ * 24 (count funcs)
+                  :position $ [] 0 $ * 24 (.len funcs)
                   :on-pointertap $ fn (e d!) (js/console.log |event e)
                     request-text! e
                       {} (:placeholder "|An expression")
@@ -378,7 +378,7 @@
             if (nil? build-errors)
               do (println "|Code updated.") (clear-phlox-caches!) (remove-watch! *store :change)
                 add-watch! *store :change $ fn (s p) (render-app!)
-                render-app-with-options! $ {} $ :swap? true
+                render! (comp-container @*store) dispatch! $ {} $ :swap? true
                 hud! |ok~ |Ok
               hud! |error build-errors
             , &unit
@@ -389,11 +389,6 @@
             render! (comp-container @*store) dispatch! $ {}
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
-        'render-app-with-options! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render-app-with-options! (options)
-            render! (comp-container @*store) dispatch! options
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI) (|shortid :as shortid)
