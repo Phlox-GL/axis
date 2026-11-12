@@ -98,41 +98,25 @@
                     (:some stored) (or stored default-state)
                     (:none) default-state
                   Map Tag Dynamic
+                viewport $ app.schema/decode-viewport state
               container
                 {} $ :position $ [] -400 -300
-                let
-                    position $ decode-map-as
-                      .unwrap $ get state :position
-                      List Number
-                  comp-axis $ %{} app.schema/AxisOptions (:position position)
-                    :size $ subtract-path
-                      decode-map-as
-                        .unwrap $ get state :edge
-                        List Number
-                      , position
-                    :x-range $ decode-map-as
-                      []
-                        .unwrap $ get state :x0
-                        .unwrap $ get state :x1
-                      List Number
-                    :y-range $ decode-map-as
-                      []
-                        .unwrap $ get state :y0
-                        .unwrap $ get state :y1
-                      List Number
-                    :n $ decode-map-as
-                      .unwrap $ get state :n
-                      , 'Number
-                    :funcs $ map (typed-funcs state) typed-function-tree
-                comp-controls cursor states state
+                comp-axis $ %{} app.schema/AxisOptions
+                  :position $ :position viewport
+                  :size $ subtract-path (:edge viewport) (:position viewport)
+                  :x-range $ [] (:x0 viewport) (:x1 viewport)
+                  :y-range $ [] (:y0 viewport) (:y1 viewport)
+                  :n $ :n viewport
+                  :funcs $ map (typed-funcs state) typed-function-tree
+                comp-controls cursor states state viewport
                 comp-funcs cursor states state
           :examples $ []
           :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi)
         'comp-controls $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-controls (cursor states state)
+          :code $ quote $ defcomp comp-controls (cursor states state viewport)
             let
-                position-list $ typed-number-list state :position
-                edge-list $ typed-number-list state :edge
+                position-list $ :position viewport
+                edge-list $ :edge viewport
               container ({})
                 comp-drag-point (>> states :position)
                   {} (:position position-list) (:unit 1) (:title |[0,0])
@@ -146,9 +130,7 @@
                       , &unit
                 comp-slider-point (>> states :x0)
                   {}
-                    :value $ decode-map-as
-                      .unwrap $ get state :x0
-                      , Number
+                    :value $ :x0 viewport
                     :unit 0.1
                     :position $ ->
                       []
@@ -160,9 +142,7 @@
                       , &unit
                 comp-slider-point (>> states :x1)
                   {}
-                    :value $ decode-map-as
-                      .unwrap $ get state :x1
-                      , Number
+                    :value $ :x1 viewport
                     :unit 0.1
                     :position $ -> edge-list $ add-path ([] -20 20)
                     :on-change $ fn (v d!)
@@ -170,9 +150,7 @@
                       , &unit
                 comp-slider-point (>> states :y0)
                   {}
-                    :value $ decode-map-as
-                      .unwrap $ get state :y0
-                      , Number
+                    :value $ :y0 viewport
                     :unit 0.1
                     :position $ ->
                       []
@@ -184,9 +162,7 @@
                       , &unit
                 comp-slider-point (>> states :y1)
                   {}
-                    :value $ decode-map-as
-                      .unwrap $ get state :y1
-                      , Number
+                    :value $ :y1 viewport
                     :unit 0.1
                     :position $ add-path position-list $ [] -60 0
                     :on-change $ fn (v d!)
@@ -194,9 +170,7 @@
                       , &unit
                 comp-slider (>> states :n)
                   {}
-                    :value $ decode-map-as
-                      .unwrap $ get state :n
-                      , Number
+                    :value $ :n viewport
                     :unit 0.5
                     :round? true
                     :position $ [] 80 40
@@ -206,7 +180,7 @@
                       d! $ app.schema/Op :states cursor $ assoc state :n v
                       , &unit
           :examples $ []
-          :schema $ quote $ Fn (List Tag) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (List Tag) (Map Tag Dynamic) (Map Tag Dynamic) app.schema/AxisViewport (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-funcs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-funcs (cursor states state)
             let
@@ -300,16 +274,6 @@
               assert= rows decoded
               assert= (parse-function-code "|+ x 1")
                 typed-function-tree $ .unwrap $ first decoded
-        'typed-number-list $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn typed-number-list (options key)
-            decode-map-as
-              .unwrap-or (get options key) ([])
-              List Number
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag V) Tag
-            -> $ List Number
-            :generics V
-            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
@@ -341,7 +305,7 @@
               reset! *store $ updater @*store operation op-id op-time
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :io :js-ffi :state)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             if (enum? op)
@@ -355,7 +319,7 @@
                 _ $ do (eprintln "|unknown op" op) &unit
               raise "|Expected an Enum operation"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic (-> Unit) (:features :io :js-ffi :state)
         'global-fonts $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn global-fonts ()
             js-cast
@@ -380,14 +344,14 @@
             browser/add-event-listener! |beforeunload persist-store!
             println "|App Started"
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'persist-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-store! (e)
             let
                 storage $ browser/window-local-storage
               storage .set-item! |axis $ format-cirru-edn @*store
           :examples $ []
-          :schema $ quote $ Fn browser/EventHost (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn browser/EventHost (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -398,12 +362,12 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store) dispatch! $ {}
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI) (|shortid :as shortid)
@@ -446,6 +410,17 @@
             :funcs $ List $ List calc-dsl.core/Expr
           :examples $ []
           :schema $ quote StructDef
+        'AxisViewport $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct AxisViewport
+            :position $ List Number
+            :edge $ List Number
+            :x0 Number
+            :x1 Number
+            :y0 Number
+            :y1 Number
+            :n Number
+          :examples $ []
+          :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) (Map Tag Dynamic)
@@ -460,6 +435,13 @@
           :code $ quote $ defunion SavedFunctionTree CirruQuote (List calc-dsl.core/Expr)
           :examples $ []
           :schema $ quote UnionDef
+        'decode-viewport $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-viewport (state)
+            decode-map-as
+              select-keys state $ [] :position :edge :x0 :x1 :y0 :y1 :n
+              , AxisViewport
+          :examples $ []
+          :schema $ quote $ Fn (Map Tag V) (-> AxisViewport) (:generics V)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} (:tab :drafts) (:x 0)
