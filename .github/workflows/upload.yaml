@@ -62,7 +62,7 @@ jobs:
           --ns app.math --ns app.schema --ns app.updater \
           --summary-only --format json
         calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
-        calcit calcit.cirru test app.schema/typed-function-tree --require-match
+        calcit calcit.cirru test --require-match --summary-only
 
     - name: Select CDN asset path
       id: asset-path

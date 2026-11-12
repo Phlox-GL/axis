@@ -282,12 +282,24 @@
           :code $ quote $ defn typed-funcs (state)
             decode-map-as
               .unwrap-or (get state :funcs) ([])
-              List $ Map Tag Dynamic
+              List $ Map Tag app.schema/SavedFunctionField
           :examples $ []
           :schema $ quote $ Fn (Map Tag V)
-            -> $ List $ Map Tag Dynamic
+            -> $ List $ Map Tag app.schema/SavedFunctionField
             :generics V
             :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-legacy-and-current-formula-rows)
+            :code $ quote $ let
+                rows $ []
+                  {} (:code "|+ x 1")
+                    :tree $ cirru-quote $
+                      + x 1
+                  {} (:code "|* x 2")
+                    :tree $ parse-function-code "|* x 2"
+                decoded $ typed-funcs $ {} (:funcs rows)
+              assert= rows decoded
+              assert= (parse-function-code "|+ x 1")
+                typed-function-tree $ .unwrap $ first decoded
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
@@ -316,31 +328,32 @@
           :code $ quote $ defref *store schema/store
           :examples $ []
           :schema $ quote $ Ref (Map Tag Dynamic)
+        'apply-op! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn apply-op! (operation)
+            when
+              and dev? $ match operation
+                (:states _ _) false
+                _ true
+              println |dispatch! operation
+            let
+                op-id $ decode-map-as (shortid/generate) 'String
+                op-time $ decode-map-as (js/Date.now) 'Number
+              reset! *store $ updater @*store operation op-id op-time
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            let
-                apply-op $ fn (operation)
-                  hint-fn $ Fn app.schema/Op $ -> Unit
-                  when
-                    and dev? $ match op
-                      (:states _ _) false
-                      _ true
-                    println |dispatch! op
-                  let
-                      op-id $ decode-map-as (shortid/generate) 'String
-                      op-time $ decode-map-as (js/Date.now) 'Number
-                    reset! *store $ updater @*store operation op-id op-time
-                  , &unit
-              if (enum? op)
-                match op
-                  (:states cursor data)
-                    apply-op $ app.schema/Op :states
-                      decode-map-as cursor $ List respo.schema/CoordKey
-                      decode-map-as data $ Map Tag Dynamic
-                  (:hydrate-storage data)
-                    apply-op $ app.schema/Op :hydrate-storage $ decode-map-as data (Map Tag Dynamic)
-                  _ $ do (eprintln "|unknown op" op) &unit
-                raise "|Expected an Enum operation"
+            if (enum? op)
+              match op
+                (:states cursor data)
+                  apply-op! $ app.schema/Op :states
+                    decode-map-as cursor $ List respo.schema/CoordKey
+                    decode-map-as data $ Map Tag Dynamic
+                (:hydrate-storage data)
+                  apply-op! $ app.schema/Op :hydrate-storage $ decode-map-as data (Map Tag Dynamic)
+                _ $ do (eprintln "|unknown op" op) &unit
+              raise "|Expected an Enum operation"
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
         'global-fonts $ %{} 'CodeEntry (:doc |)
@@ -358,7 +371,9 @@
                 storage $ browser/window-local-storage
                 raw $ storage .get-item |axis
               when (js-present? raw)
-                dispatch! $ :: :hydrate-storage $ parse-cirru-edn (ffi/expect-string |axis.storage raw)
+                apply-op! $ app.schema/Op :hydrate-storage $ decode-map-as
+                  parse-cirru-edn $ ffi/expect-string |axis.storage raw
+                  Map Tag Dynamic
             -> (global-fonts)
               phlox.core/ffi-then $ fn (e) (render-app!)
             add-watch! *store :change $ fn (s p) (render-app!)
@@ -437,6 +452,10 @@
             :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
+        'SavedFunctionField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion SavedFunctionField String SavedFunctionTree
+          :examples $ []
+          :schema $ quote UnionDef
         'SavedFunctionTree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion SavedFunctionTree CirruQuote (List calc-dsl.core/Expr)
           :examples $ []
