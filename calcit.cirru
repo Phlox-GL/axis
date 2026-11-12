@@ -282,12 +282,24 @@
           :code $ quote $ defn typed-funcs (state)
             decode-map-as
               .unwrap-or (get state :funcs) ([])
-              List $ Map Tag Dynamic
+              List $ Map Tag app.schema/SavedFunctionField
           :examples $ []
           :schema $ quote $ Fn (Map Tag V)
-            -> $ List $ Map Tag Dynamic
+            -> $ List $ Map Tag app.schema/SavedFunctionField
             :generics V
             :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-legacy-and-current-formula-rows)
+            :code $ quote $ let
+                rows $ []
+                  {} (:code "|+ x 1")
+                    :tree $ cirru-quote $
+                      + x 1
+                  {} (:code "|* x 2")
+                    :tree $ parse-function-code "|* x 2"
+                decoded $ typed-funcs $ {} (:funcs rows)
+              assert= rows decoded
+              assert= (parse-function-code "|+ x 1")
+                typed-function-tree $ .unwrap $ first decoded
         'typed-number-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn typed-number-list (options key)
             decode-map-as
@@ -440,6 +452,10 @@
             :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
+        'SavedFunctionField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion SavedFunctionField String SavedFunctionTree
+          :examples $ []
+          :schema $ quote UnionDef
         'SavedFunctionTree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion SavedFunctionTree CirruQuote (List calc-dsl.core/Expr)
           :examples $ []
