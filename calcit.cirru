@@ -109,7 +109,7 @@
                   :n $ :n viewport
                   :funcs $ map (typed-funcs state) typed-function-tree
                 comp-controls cursor states state viewport
-                comp-funcs cursor states state
+                comp-funcs cursor state
           :examples $ []
           :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi)
         'comp-controls $ %{} 'CodeEntry (:doc |)
@@ -180,9 +180,9 @@
                       d! $ app.schema/Op :states cursor $ assoc state :n v
                       , &unit
           :examples $ []
-          :schema $ quote $ Fn (List Tag) (Map Tag Dynamic) (Map Tag Dynamic) app.schema/AxisViewport (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (List Tag) (Map Tag S) (Map Tag V) app.schema/AxisViewport (-> phlox.schema/PhloxElement) (:generics S V) (:features :js-ffi)
         'comp-funcs $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-funcs (cursor states state)
+          :code $ quote $ defcomp comp-funcs (cursor state)
             let
                 funcs $ typed-funcs state
               container
@@ -238,7 +238,7 @@
                               :tree $ parse-function-code code
                         , &unit
           :examples $ []
-          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'parse-function-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-function-code (code)
             match (.parse-cirru-list code)
