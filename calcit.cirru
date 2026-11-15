@@ -238,7 +238,7 @@
                               :tree $ parse-function-code code
                         , &unit
           :examples $ []
-          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi :state)
         'parse-function-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-function-code (code)
             match (.parse-cirru-list code)

@@ -1,7 +1,7 @@
 {} (:calcit-version |0.42.1)
   :version |0.1.2
   :dependencies $ {} (|Memkits/calc-dsl |0.1.1)
-    |Phlox-GL/phlox |0.9.3
+    |Phlox-GL/phlox |0.9.5
     |Respo/respo-ui.calcit |0.15.2
     |Respo/respo.calcit |0.19.5
     |mvc-works/pointed-prompt |0.0.27
