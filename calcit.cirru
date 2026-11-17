@@ -111,7 +111,7 @@
                 comp-controls cursor states state viewport
                 comp-funcs cursor state
           :examples $ []
-          :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi :state)
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state viewport)
             let
@@ -341,7 +341,7 @@
             -> (global-fonts)
               phlox.core/ffi-then $ fn (e) (render-app!)
             add-watch! *store :change $ fn (s p) (render-app!)
-            browser/add-event-listener! |beforeunload persist-store!
+            browser/add-event-listener! |beforeunload $ fn (e) (persist-store! e)
             println "|App Started"
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
