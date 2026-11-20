@@ -76,7 +76,7 @@
                                             :width 1
                                         -> path rest $ map $ fn (point) (g :line-to point)
           :examples $ []
-          :schema $ quote $ Fn app.schema/AxisOptions (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/AxisOptions (-> phlox.schema/PhloxElement) (:features :io :js-ffi)
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
             let
@@ -111,7 +111,7 @@
                 comp-controls cursor states state viewport
                 comp-funcs cursor state
           :examples $ []
-          :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :js-ffi :state)
+          :schema $ quote $ Fn (Map Tag V) (-> phlox.schema/PhloxElement) (:generics V) (:features :io :js-ffi :state)
         'comp-controls $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-controls (cursor states state viewport)
             let
