@@ -35,16 +35,13 @@
                         n $ options :n
                       container
                         {} $ :position position
-                        graphics $ {} $ :ops
+                        path-graphics ([] 0 0)
                           []
-                            g :move-to $ [] 0 h
-                            g :line-style $ {}
-                              :color $ hslx 0 0 50
-                              :alpha 1
-                              :width 1
-                            g :line-to $ [] 0 0
-                            g :move-to $ [] 0 h
-                            g :line-to $ [] w h
+                            PathOp :move-to $ [] 0 h
+                            PathOp :line-style (hslx 0 0 50) 1 1
+                            PathOp :line-to $ [] 0 0
+                            PathOp :move-to $ [] 0 h
+                            PathOp :line-to $ [] w h
                         create-list :container ({})
                           -> (options :funcs)
                             map-indexed $ fn (idx func)
@@ -64,17 +61,14 @@
                                           my $ - h $ * h
                                             / (- y y0) (- y1 y0)
                                         [] mx my
-                                graphics $ {} $ :ops
+                                path-graphics ([] 0 0)
                                   match (first path)
                                     (:none) ([])
                                     (:some start)
                                       concat
-                                        [] (g :move-to start)
-                                          g :line-style $ {}
-                                            :color $ hslx 0 0 100
-                                            :alpha 1
-                                            :width 1
-                                        -> path rest $ map $ fn (point) (g :line-to point)
+                                        [] (PathOp :move-to start)
+                                          PathOp :line-style (hslx 0 0 100) 1 1
+                                        -> path rest $ map $ fn (point) (PathOp :line-to point)
           :examples $ []
           :schema $ quote $ Fn app.schema/AxisOptions (-> phlox.schema/PhloxElement) (:features :io :js-ffi)
         'comp-container $ %{} 'CodeEntry (:doc |)
@@ -277,7 +271,8 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
-            phlox.core :refer $ defcomp hslx >> rect circle text container graphics create-list g
+            phlox.core :refer $ defcomp hslx >> rect circle text container path-graphics create-list
+            phlox.schema :refer $ PathOp
             phlox.comp.drag-point :refer $ comp-drag-point
             phlox.comp.button :refer $ comp-button
             phlox.comp.slider :refer $ comp-slider comp-slider-point
