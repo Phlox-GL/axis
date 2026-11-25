@@ -89,7 +89,10 @@
                   :funcs $ []
                 state $ decode-map-as
                   match (get states :data)
-                    (:some stored) (or stored default-state)
+                    (:some stored)
+                      if
+                        or (nil? stored) (identical? false stored)
+                        , default-state stored
                     (:none) default-state
                   Map Tag Dynamic
                 viewport $ app.schema/decode-viewport state
